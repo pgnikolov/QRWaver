@@ -16,11 +16,17 @@
                 <p class="tagline">Weaving Your Digital Connections</p>
             </div>
             <nav class="nav">
-                <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                <a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">
                     🏠 Начало
                 </a>
-                <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">
-                    ℹ️ Относно
+                <a href="{{ url_for('main.facebook_qr') }}" class="nav-link {% if request.endpoint == 'main.facebook_qr' %}active{% endif %}">
+                    📘 Facebook
+                </a>
+                <a href="{{ url_for('main.instagram_qr') }}" class="nav-link {% if request.endpoint == 'main.instagram_qr' %}active{% endif %}">
+                    📷 Instagram
+                </a>
+                <a href="{{ url_for('main.linkedin_qr') }}" class="nav-link {% if request.endpoint == 'main.linkedin_qr' %}active{% endif %}">
+                    💼 LinkedIn
                 </a>
             </nav>
         </header>
@@ -50,5 +56,6 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

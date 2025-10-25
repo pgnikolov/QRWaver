@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Instagram QR Generator - QRWeaver{% endblock %}
+
+{% block content %}
+<div class="social-generator">
+    <div class="platform-header">
+        <div class="platform-icon">📷</div>
+        <h1>Instagram QR код</h1>
+        <p>Създайте цветни QR кодове с Instagram градиенти</p>
+    </div>
+
+    <div class="generator-container">
+        <form method="POST" class="qr-form" id="instagramForm">
+            <div class="form-section">
+                <h3>📝 Основна информация</h3>
+                
+                <div class="form-group">
+                    <label for="profile_url" class="form-label">Instagram профил:</label>
+                    <input type="text" id="profile_url" name="profile_url" 
+                           class="form-input" 
+                           placeholder="instagram.com/username или просто username"
+                           value="{{ request.form.profile_url or '' }}" required>
+                    <small class="form-help">Може да въведете с или без @</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="display_name" class="form-label">Потребителско име:</label>
+                    <input type="text" id="display_name" name="display_name" 
+                           class="form-input" 
+                           placeholder="@username"
+                           value="{{ request.form.display_name or '' }}" required>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>⚙️ Настройки</h3>
+                
+                <div class="form-options">
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="use_shortlink" id="use_shortlink" checked>
+                        <span class="checkmark"></span>
+                        <span class="option-text">Използвай shortlink (instagram.com/username)</span>
+                    </label>
+
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="rounded_corners" id="rounded_corners">
+                        <span class="checkmark"></span>
+                        <span class="option-text">Закръглени ъгли</span>
+                    </label>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="corner_radius" class="form-label">Радиус на ъглите:</label>
+                        <input type="number" id="corner_radius" name="corner_radius" 
+                               class="form-input" value="40" min="0" max="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qr_size" class="form-label">Размер на QR кода:</label>
+                        <select id="qr_size" name="qr_size" class="form-select">
+                            <option value="250">Малък (250px)</option>
+                            <option value="300" selected>Среден (300px)</option>
+                            <option value="400">Голям (400px)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-instagram btn-large">
+                🎨 Генерирай Instagram QR код
+            </button>
+        </form>
+
+        {% if success %}
+        <div class="qr-result">
+            <div class="result-header">
+                <h3>✅ Вашият Instagram QR код е готов!</h3>
+            </div>
+            
+            <div class="qr-preview">
+                <img src="data:image/png;base64,{{ qr_image }}" 
+                     alt="Instagram QR Code" 
+                     class="qr-image">
+            </div>
+
+            <div class="qr-info">
+                <div class="info-item">
+                    <strong>Shortlink:</strong> 
+                    <span class="shortlink">{{ shortlink }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Пълен URL:</strong> 
+                    <span class="full-url">{{ full_url }}</span>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('main.download_qr', platform='instagram') }}" class="download-form">
+                <input type="hidden" name="profile_url" value="{{ request.form.profile_url }}">
+                <input type="hidden" name="display_name" value="{{ request.form.display_name }}">
+                <input type="hidden" name="use_shortlink" value="{{ 'true' if request.form.use_shortlink else 'false' }}">
+                <input type="hidden" name="rounded_corners" value="{{ 'true' if request.form.rounded_corners else 'false' }}">
+                <input type="hidden" name="corner_radius" value="{{ request.form.corner_radius or '40' }}">
+                <input type="hidden" name="qr_size" value="{{ request.form.qr_size or '300' }}">
+                
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-download">
+                        💾 Изтегли QR кода
+                    </button>
+                    <button type="button" onclick="shareQR()" class="btn btn-share">
+                        📤 Сподели
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function shareQR() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Моят Instagram QR код',
+            text: 'Сканирай този QR код за да ме последваш в Instagram!',
+            url: '{{ full_url }}'
+        });
+    } else {
+        alert('Функцията за споделяне не се поддържа от вашия браузър. Можете да изтеглите QR кода.');
+    }
+}
+
+// Quick examples
+const instagramExamples = [
+    'instagram.com/johndoe',
+    'johndoe',
+    '@johndoe'
+];
+
+document.addEventListener('DOMContentLoaded', function() {
+    const profileUrlInput = document.getElementById('profile_url');
+    
+    // Add example buttons
+    const examplesContainer = document.createElement('div');
+    examplesContainer.className = 'quick-examples';
+    examplesContainer.innerHTML = '<h4>⚡ Бързи примери:</h4><div class="example-buttons"></div>';
+    
+    profileUrlInput.parentNode.appendChild(examplesContainer);
+    
+    const examplesDiv = examplesContainer.querySelector('.example-buttons');
+    instagramExamples.forEach(example => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'example-btn';
+        button.textContent = example;
+        button.addEventListener('click', () => {
+            profileUrlInput.value = example;
+        });
+        examplesDiv.appendChild(button);
+    });
+});
+</script>
+{% endblock %}

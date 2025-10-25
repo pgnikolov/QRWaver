@@ -6,140 +6,48 @@
     <p>Преврати всяка връзка в красиво цифрово изкуство</p>
 </div>
 
-{% if about_page %}
-<!-- About Page Content -->
-<div class="about-section">
-    <div class="about-card">
-        <h2>🎨 Относно QRWeaver</h2>
-        <p>QRWeaver е иновативна платформа за създаване на персонализирани QR кодове с уникални стилове и дизайни.</p>
-        
-        <div class="features">
-            <div class="feature">
-                <h3>🚀 Бързо и Лесно</h3>
-                <p>Генерирай QR кодове за секунди с интуитивен интерфейс.</p>
-            </div>
-            <div class="feature">
-                <h3>🎨 Стилове за Всеки</h3>
-                <p>Избирай от разнообразни дизайни - от модерни до професионални.</p>
-            </div>
-            <div class="feature">
-                <h3>📱 Оптимизирано</h3>
-                <p>Перфектно работи на всички устройства - телефон, таблет, компютър.</p>
-            </div>
-        </div>
+<div class="platforms-grid">
+    <div class="platform-card">
+        <div class="platform-icon">📘</div>
+        <h3>Facebook QR</h3>
+        <p>Персонализирани QR кодове за вашия Facebook профил</p>
+        <a href="{{ url_for('main.facebook_qr') }}" class="btn btn-primary">Създай Facebook QR</a>
+    </div>
+
+    <div class="platform-card">
+        <div class="platform-icon">📷</div>
+        <h3>Instagram QR</h3>
+        <p>Цветни QR кодове с Instagram градиенти</p>
+        <a href="{{ url_for('main.instagram_qr') }}" class="btn btn-primary">Създай Instagram QR</a>
+    </div>
+
+    <div class="platform-card">
+        <div class="platform-icon">💼</div>
+        <h3>LinkedIn QR</h3>
+        <p>Професионални QR кодове за LinkedIn профил</p>
+        <a href="{{ url_for('main.linkedin_qr') }}" class="btn btn-primary">Създай LinkedIn QR</a>
     </div>
 </div>
 
-{% else %}
-<!-- Main QR Generator Content -->
-<div class="generator-container">
-    <div class="generator-form">
-        <form method="POST" action="{{ url_for('generate_qr') }}" class="qr-form">
-            <div class="form-group">
-                <label for="qr_data" class="form-label">
-                    📝 Въведете данни за QR кода:
-                </label>
-                <textarea 
-                    id="qr_data" 
-                    name="qr_data" 
-                    class="form-textarea" 
-                    placeholder="https://example.com или текст за кодиране..."
-                    rows="4"
-                    required
-                >{% if qr_info %}{{ qr_info.data }}{% endif %}</textarea>
-                <small class="form-help">Поддържаме URL адреси, текст, контакти и много други!</small>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="style" class="form-label">🎨 Стил:</label>
-                    <select id="style" name="style" class="form-select">
-                        {% for style in styles %}
-                            <option value="{{ style }}" 
-                                {% if qr_info and qr_info.style == style %}selected{% endif %}>
-                                {{ style|title }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="size" class="form-label">📏 Размер:</label>
-                    <select id="size" name="size" class="form-select">
-                        <option value="200" {% if qr_info and qr_info.size == 200 %}selected{% endif %}>Малък (200px)</option>
-                        <option value="300" {% if not qr_info or qr_info.size == 300 %}selected{% endif %}>Среден (300px)</option>
-                        <option value="400" {% if qr_info and qr_info.size == 400 %}selected{% endif %}>Голям (400px)</option>
-                    </select>
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary">
-                🧵 Генерирай QR код
-            </button>
-        </form>
-    </div>
-
-    {% if qr_image %}
-    <!-- QR Code Result -->
-    <div class="result-container">
-        <div class="result-card">
-            <h3>✅ Твоят QR код е готов!</h3>
-            
-            <div class="qr-preview">
-                <img src="data:image/png;base64,{{ qr_image }}" 
-                     alt="Генериран QR код" 
-                     class="qr-image">
-            </div>
-
-            <div class="qr-info">
-                <p><strong>Стил:</strong> {{ qr_info.style|title }}</p>
-                <p><strong>Размер:</strong> {{ qr_info.size }}px</p>
-                <p><strong>Генериран на:</strong> {{ qr_info.timestamp }}</p>
-            </div>
-
-            <!-- Download Form -->
-            <form method="POST" action="{{ url_for('download_qr') }}" class="download-form">
-                <input type="hidden" name="download_data" value="{{ qr_info.data }}">
-                <input type="hidden" name="download_style" value="{{ qr_info.style }}">
-                <input type="hidden" name="download_size" value="{{ qr_info.size }}">
-                
-                <button type="submit" class="btn btn-download">
-                    💾 Изтегли QR кода
-                </button>
-            </form>
+<div class="features-section">
+    <h2>✨ Всички възможности на едно място</h2>
+    <div class="features-grid">
+        <div class="feature">
+            <h3>🎨 Rounded Corners</h3>
+            <p>Изберете закръглени ъгли за по-модерен вид</p>
         </div>
-    </div>
-    {% endif %}
-
-    <!-- Quick Examples -->
-    <div class="examples-section">
-        <h3>⚡ Бързи примери:</h3>
-        <div class="examples-grid">
-            <button class="example-btn" data-example="https://github.com">
-                🌐 GitHub
-            </button>
-            <button class="example-btn" data-example="https://instagram.com">
-                📷 Instagram
-            </button>
-            <button class="example-btn" data-example="Hello from QRWeaver!">
-                📝 Текст
-            </button>
-            <button class="example-btn" data-example="mailto:example@email.com">
-                ✉️ Email
-            </button>
+        <div class="feature">
+            <h3>🔗 Shortlinks</h3>
+            <p>Автоматично генериране на кратки линкове</p>
+        </div>
+        <div class="feature">
+            <h3>📱 Оптимизирани</h3>
+            <p>Перфектни за принтиране и споделяне</p>
+        </div>
+        <div class="feature">
+            <h3>🎯 Брандирани</h3>
+            <p>Цветове и логота на всяка платформа</p>
         </div>
     </div>
 </div>
-{% endif %}
-
-<!-- Error Display -->
-{% if error %}
-<div class="error-container">
-    <div class="error-card">
-        <h3>❌ Грешка</h3>
-        <p>{{ error }}</p>
-        <a href="{{ url_for('index') }}" class="btn btn-primary">Върни се към началото</a>
-    </div>
-</div>
-{% endif %}
 {% endblock %}
