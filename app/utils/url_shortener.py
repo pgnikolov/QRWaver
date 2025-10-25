@@ -2,7 +2,21 @@ import re
 
 
 def create_social_shortlink(profile_url, platform):
-    """Create shortlinks for social media profiles"""
+    """
+    Generates a shortened or formatted social media URL based on the given profile URL and
+    specified platform. Cleans and parses the input URL and adjusts it for Facebook, Instagram,
+    or LinkedIn platforms. If the provided profile URL is already clean, it ensures proper
+    platform-specific formatting.
+
+    :param profile_url: The profile URL to be shortened or formatted.
+    :type profile_url: str
+    :param platform: The name of the social media platform. Acceptable values are 'facebook',
+        'instagram', or 'linkedin'.
+    :type platform: str
+    :return: The formatted or shortened social media URL. If no matching platform rules are met,
+        the given profile URL remains unaltered.
+    :rtype: str
+    """
 
     # Clean the profile URL
     profile_url = profile_url.strip()
@@ -35,7 +49,20 @@ def create_social_shortlink(profile_url, platform):
 
 
 def get_full_url(shortlink, platform):
-    """Convert shortlink to full URL"""
+    """
+    Generates the full URL for a given shortlink, ensuring it includes the proper
+    protocol (https://) if missing. Useful for standardizing short URLs across
+    different platforms.
+
+    :param shortlink: A string representing the short URL that may or may not
+        include the protocol (http:// or https://).
+    :type shortlink: str
+    :param platform: An identifier for the platform where the shortlink is used.
+        This parameter determines platform-specific URL handling logic.
+    :type platform: str
+    :return: A string containing the full URL with the appropriate protocol.
+    :rtype: str
+    """
     if not shortlink.startswith(('http://', 'https://')):
         return f"https://{shortlink}"
     return shortlink

@@ -29,7 +29,7 @@ def facebook_qr():
             qr_size = int(request.form.get('qr_size', 300))
 
             if not profile_url or not display_name:
-                flash('Моля, попълнете всички полета!', 'error')
+                flash('Please fill in all fields!', 'error')
                 return render_template('social/facebook.html')
 
             qr_image, shortlink, full_url = generate_facebook_qr(
@@ -54,7 +54,7 @@ def facebook_qr():
                                    success=True)
 
         except Exception as e:
-            flash(f'Грешка при генериране: {str(e)}', 'error')
+            flash(f'Generation error: {str(e)}', 'error')
 
     return render_template('social/facebook.html')
 
@@ -71,7 +71,7 @@ def instagram_qr():
             qr_size = int(request.form.get('qr_size', 300))
 
             if not profile_url or not display_name:
-                flash('Моля, попълнете всички полета!', 'error')
+                flash('Please fill in all fields!', 'error')
                 return render_template('social/instagram.html')
 
             qr_image, shortlink, full_url = generate_instagram_qr(
@@ -96,7 +96,7 @@ def instagram_qr():
                                    success=True)
 
         except Exception as e:
-            flash(f'Грешка при генериране: {str(e)}', 'error')
+            flash(f'Generation error: {str(e)}', 'error')
 
     return render_template('social/instagram.html')
 
@@ -113,7 +113,7 @@ def linkedin_qr():
             qr_size = int(request.form.get('qr_size', 300))
 
             if not profile_url or not display_name:
-                flash('Моля, попълнете всички полета!', 'error')
+                flash('Please fill in all fields!', 'error')
                 return render_template('social/linkedin.html')
 
             qr_image, shortlink, full_url = generate_linkedin_qr(
@@ -138,7 +138,7 @@ def linkedin_qr():
                                    success=True)
 
         except Exception as e:
-            flash(f'Грешка при генериране: {str(e)}', 'error')
+            flash(f'Generation error: {str(e)}', 'error')
 
     return render_template('social/linkedin.html')
 

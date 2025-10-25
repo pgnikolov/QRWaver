@@ -3,6 +3,17 @@ import os
 
 
 def create_app():
+    """
+    Creates and configures an instance of the Flask application. This function initializes
+    the main application by setting up configuration options, registering blueprints, and
+    preparing necessary application-level settings.
+
+    :raises RuntimeError: If the Flask application fails to initiate due to missing or
+        misconfigured components.
+
+    :return: An instance of the Flask application configured and ready for use.
+    :rtype: Flask
+    """
     app = Flask(__name__,
                 template_folder='../templates',
                 static_folder='../static')
