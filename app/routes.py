@@ -23,8 +23,8 @@ def facebook_qr():
         try:
             profile_url = request.form.get('profile_url', '').strip()
             display_name = request.form.get('display_name', '').strip()
-            use_shortlink = request.form.get('use_shortlink') == 'true'
-            rounded_corners = request.form.get('rounded_corners') == 'true'
+            use_shortlink = 'use_shortlink' in request.form
+            rounded_corners = 'rounded_corners' in request.form
             corner_radius = int(request.form.get('corner_radius', 40))
             qr_size = int(request.form.get('qr_size', 300))
 
@@ -65,8 +65,8 @@ def instagram_qr():
         try:
             profile_url = request.form.get('profile_url', '').strip()
             display_name = request.form.get('display_name', '').strip()
-            use_shortlink = request.form.get('use_shortlink') == 'true'
-            rounded_corners = request.form.get('rounded_corners') == 'true'
+            use_shortlink = 'use_shortlink' in request.form
+            rounded_corners = 'rounded_corners' in request.form
             corner_radius = int(request.form.get('corner_radius', 40))
             qr_size = int(request.form.get('qr_size', 300))
 
@@ -107,8 +107,8 @@ def linkedin_qr():
         try:
             profile_url = request.form.get('profile_url', '').strip()
             display_name = request.form.get('display_name', '').strip()
-            use_shortlink = request.form.get('use_shortlink') == 'true'
-            rounded_corners = request.form.get('rounded_corners') == 'true'
+            use_shortlink = 'use_shortlink' in request.form
+            rounded_corners = 'rounded_corners' in request.form
             corner_radius = int(request.form.get('corner_radius', 40))
             qr_size = int(request.form.get('qr_size', 300))
 
@@ -148,8 +148,8 @@ def download_qr(platform):
     try:
         profile_url = request.form.get('profile_url')
         display_name = request.form.get('display_name')
-        use_shortlink = request.form.get('use_shortlink') == 'true'
-        rounded_corners = request.form.get('rounded_corners') == 'true'
+        use_shortlink = 'use_shortlink' in request.form
+        rounded_corners = 'rounded_corners' in request.form
         corner_radius = int(request.form.get('corner_radius', 40))
         qr_size = int(request.form.get('qr_size', 300))
 
@@ -208,7 +208,7 @@ def api_generate():
         platform = data.get('platform')
         profile_url = data.get('profile_url')
         display_name = data.get('display_name')
-        use_shortlink = data.get('use_shortlink', True)
+        use_shortlink = data.get('use_shortlink', False)
         rounded_corners = data.get('rounded_corners', False)
         corner_radius = data.get('corner_radius', 40)
         qr_size = data.get('qr_size', 300)

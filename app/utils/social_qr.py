@@ -50,7 +50,7 @@ class SocialQRGenerator:
                 shortlink = create_social_shortlink(profile_url, platform)
                 qr_data = get_full_url(shortlink, platform)
             else:
-                shortlink = create_social_shortlink(profile_url, platform)
+                shortlink = None
                 qr_data = get_full_url(profile_url, platform)
 
             qr_image = self._create_base_qr(qr_data, platform, qr_size)
