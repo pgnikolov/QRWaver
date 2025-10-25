@@ -7,13 +7,19 @@ from .url_shortener import create_social_shortlink, get_full_url
 class SocialQRGenerator:
     """Универсален генератор за социални мрежи"""
 
-    # Платформени цветове
+    # Платформени цветове в RGB формат
     PLATFORM_COLORS = {
-        "facebook": "#3f5c99",
-        "instagram": ["#405DE6", "#5851DB", "#833AB4", "#C13584", "#E1306C"],
-        "linkedin": "#225982",
-        "twitter": "#1DA1F2",
-        "youtube": "#FF0000"
+        "facebook": (63, 92, 153),  # Facebook blue
+        "instagram": [
+            (64, 93, 230),  # Instagram blue
+            (88, 81, 219),  # Instagram purple-blue
+            (131, 58, 180),  # Instagram purple
+            (193, 53, 132),  # Instagram magenta
+            (225, 48, 108)  # Instagram pink
+        ],
+        "linkedin": (34, 89, 130),  # LinkedIn blue
+        "twitter": (29, 161, 242),  # Twitter blue
+        "youtube": (255, 0, 0)  # YouTube red
     }
 
     def __init__(self):
@@ -28,28 +34,32 @@ class SocialQRGenerator:
                            corner_radius=40, qr_size=300):
         """Генерира QR код за социална мрежа с опции"""
 
-        # Създаване на shortlink
-        if use_shortlink:
-            shortlink = create_social_shortlink(profile_url, platform)
-            qr_data = get_full_url(shortlink, platform)
-        else:
-            shortlink = profile_url
-            qr_data = get_full_url(profile_url, platform)
+        try:
+            # Създаване на shortlink
+            if use_shortlink:
+                shortlink = create_social_shortlink(profile_url, platform)
+                qr_data = get_full_url(shortlink, platform)
+            else:
+                shortlink = profile_url
+                qr_data = get_full_url(profile_url, platform)
 
-        # Генериране на QR код
-        qr_image = self._create_base_qr(qr_data, platform, qr_size)
+            # Генериране на QR код
+            qr_image = self._create_base_qr(qr_data, platform, qr_size)
 
-        # Добавяне на лого
-        qr_image = self._add_logo(qr_image, platform, qr_size)
+            # Добавяне на лого
+            qr_image = self._add_logo(qr_image, platform, qr_size)
 
-        # Добавяне на текст
-        final_image = self._add_text_section(qr_image, platform, display_name, shortlink, qr_size)
+            # Добавяне на текст
+            final_image = self._add_text_section(qr_image, platform, display_name, shortlink, qr_size)
 
-        # Прилагане на rounded corners ако е избрано
-        if rounded_corners:
-            final_image = add_rounded_corners(final_image, corner_radius)
+            # Прилагане на rounded corners ако е избрано
+            if rounded_corners:
+                final_image = add_rounded_corners(final_image, corner_radius)
 
-        return final_image, shortlink, qr_data
+            return final_image, shortlink, qr_data
+
+        except Exception as e:
+            raise Exception(f"Грешка при генериране на QR код: {str(e)}")
 
     def _create_base_qr(self, data, platform, size):
         """Създава базов QR код с платформен цвят"""
@@ -63,16 +73,24 @@ class SocialQRGenerator:
         qr.make(fit=True)
 
         # Вземане на цветове за платформата
-        colors = self.PLATFORM_COLORS.get(platform, ["#000000"])
+        colors = self.PLATFORM_COLORS.get(platform, [(0, 0, 0)])  # Черно по подразбиране
 
         if platform == "instagram" and len(colors) > 1:
             return self._create_gradient_qr(qr, colors, size)
         else:
-            return self._create_solid_qr(qr, colors[0], size)
+            # Вземи първия цвят (за платформи с един цвят)
+            main_color = colors[0] if isinstance(colors[0], tuple) else colors
+            return self._create_solid_qr(qr, main_color, size)
 
     def _create_solid_qr(self, qr, color, size):
         """Създава QR код с един цвят"""
-        qr_img = qr.make_image(fill_color=color, back_color="white")
+        # Увери се, че цветът е в правилен формат
+        if isinstance(color, tuple):
+            fill_color = color
+        else:
+            fill_color = (0, 0, 0)  # Черно по подразбиране
+
+        qr_img = qr.make_image(fill_color=fill_color, back_color="white")
         return qr_img.resize((size, size))
 
     def _create_gradient_qr(self, qr, colors, size):
@@ -148,7 +166,8 @@ class SocialQRGenerator:
         except:
             font_large = font_medium = font_small = ImageFont.load_default()
 
-        platform_color = self.PLATFORM_COLORS.get(platform, ["#000000"])[0]
+        # Вземи цвета на платформата
+        platform_color = self.PLATFORM_COLORS.get(platform, [(0, 0, 0)])[0]
 
         # Display name
         name_width = draw.textlength(display_name, font=font_large)
@@ -158,13 +177,13 @@ class SocialQRGenerator:
         # Shortlink
         shortlink_width = draw.textlength(shortlink, font=font_medium)
         shortlink_x = (qr_size - shortlink_width) // 2
-        draw.text((shortlink_x, qr_size + 50), shortlink, fill="#333333", font=font_medium)
+        draw.text((shortlink_x, qr_size + 50), shortlink, fill=(51, 51, 51), font=font_medium)  # Dark gray
 
         # Scan text
         scan_text = self._get_scan_text(platform)
         scan_width = draw.textlength(scan_text, font=font_small)
         scan_x = (qr_size - scan_width) // 2
-        draw.text((scan_x, qr_size + 80), scan_text, fill="#666666", font=font_small)
+        draw.text((scan_x, qr_size + 80), scan_text, fill=(102, 102, 102), font=font_small)  # Gray
 
         # Platform color bar
         bar_height = 6
@@ -189,7 +208,7 @@ class SocialQRGenerator:
         size = 80
         logo = Image.new('RGBA', (size, size), (0, 0, 0, 0))
         draw = ImageDraw.Draw(logo)
-        color = self.PLATFORM_COLORS.get(platform, ["#000000"])[0]
+        color = self.PLATFORM_COLORS.get(platform, [(0, 0, 0)])[0]
 
         if platform == "facebook":
             draw.rectangle([20, 10, 60, 70], fill=color)
