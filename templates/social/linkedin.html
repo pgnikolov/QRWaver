@@ -85,6 +85,7 @@
                      class="qr-image">
             </div>
 
+            {% if shortlink %}
             <div class="qr-info">
                 <div class="info-item">
                     <strong>Shortlink:</strong>
@@ -95,6 +96,7 @@
                     <span class="full-url">{{ full_url }}</span>
                 </div>
             </div>
+            {% endif %}
 
             <form method="POST" action="{{ url_for('main.download_qr', platform='linkedin') }}" class="download-form">
                 <input type="hidden" name="profile_url" value="{{ request.form.profile_url }}">

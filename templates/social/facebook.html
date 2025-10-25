@@ -19,7 +19,7 @@
                     <label for="profile_url" class="form-label">Facebook profile URL:</label>
                     <input type="url" id="profile_url" name="profile_url"
                            class="form-input"
-                           placeholder="https://facebook.com/username или username"
+                           placeholder="https://facebook.com/username or username"
                            value="{{ request.form.profile_url or '' }}" required>
                     <small class="form-help">You can enter a full URL or just a username.</small>
                 </div>
@@ -62,7 +62,7 @@
                         <select id="qr_size" name="qr_size" class="form-select">
                             <option value="250">Small (250px)</option>
                             <option value="300" selected>Medium (300px)</option>
-                            <option value="400">Big (400px)</option>
+                            <option value="400">Large (400px)</option>
                         </select>
                     </div>
                 </div>
@@ -76,7 +76,7 @@
         {% if success %}
         <div class="qr-result">
             <div class="result-header">
-                <h3>✅ Your Facebook QR code is ready.!</h3>
+                <h3>✅ Your Facebook QR code is ready!</h3>
             </div>
 
             <div class="qr-preview">
@@ -85,16 +85,18 @@
                      class="qr-image">
             </div>
 
+            {% if shortlink %}
             <div class="qr-info">
                 <div class="info-item">
                     <strong>Shortlink:</strong>
                     <span class="shortlink">{{ shortlink }}</span>
                 </div>
                 <div class="info-item">
-                    <strong>Пълен URL:</strong>
+                    <strong>Full URL:</strong>
                     <span class="full-url">{{ full_url }}</span>
                 </div>
             </div>
+            {% endif %}
 
             <form method="POST" action="{{ url_for('main.download_qr', platform='facebook') }}" class="download-form">
                 <input type="hidden" name="profile_url" value="{{ request.form.profile_url }}">
@@ -106,10 +108,10 @@
 
                 <div class="action-buttons">
                     <button type="submit" class="btn btn-download">
-                        💾 Изтегли QR кода
+                        💾 Download QR Code
                     </button>
                     <button type="button" onclick="shareQR()" class="btn btn-share">
-                        📤 Сподели
+                        📤 Share
                     </button>
                 </div>
             </form>

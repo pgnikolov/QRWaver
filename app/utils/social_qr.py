@@ -50,7 +50,7 @@ class SocialQRGenerator:
                 shortlink = create_social_shortlink(profile_url, platform)
                 qr_data = get_full_url(shortlink, platform)
             else:
-                shortlink = profile_url
+                shortlink = create_social_shortlink(profile_url, platform)
                 qr_data = get_full_url(profile_url, platform)
 
             qr_image = self._create_base_qr(qr_data, platform, qr_size)
@@ -165,15 +165,21 @@ class SocialQRGenerator:
         draw.text((name_x, qr_size + 15), display_name, fill=platform_color, font=font_large)
 
         # Shortlink
-        shortlink_width = draw.textlength(shortlink, font=font_medium)
-        shortlink_x = (qr_size - shortlink_width) // 2
-        draw.text((shortlink_x, qr_size + 50), shortlink, fill=(51, 51, 51), font=font_medium)  # Dark gray
+        if shortlink:
+            shortlink_width = draw.textlength(shortlink, font=font_medium)
+            shortlink_x = (qr_size - shortlink_width) // 2
+            draw.text((shortlink_x, qr_size + 50), shortlink, fill=(51, 51, 51), font=font_medium)  # Dark gray
 
-        # Scan text
-        scan_text = self._get_scan_text(platform)
-        scan_width = draw.textlength(scan_text, font=font_small)
-        scan_x = (qr_size - scan_width) // 2
-        draw.text((scan_x, qr_size + 80), scan_text, fill=(102, 102, 102), font=font_small)  # Gray
+            # Scan text
+            scan_text = self._get_scan_text(platform)
+            scan_width = draw.textlength(scan_text, font=font_small)
+            scan_x = (qr_size - scan_width) // 2
+            draw.text((scan_x, qr_size + 80), scan_text, fill=(102, 102, 102), font=font_small)  # Gray
+        else:
+            scan_text = self._get_scan_text(platform)
+            scan_width = draw.textlength(scan_text, font=font_small)
+            scan_x = (qr_size - scan_width) // 2
+            draw.text((scan_x, qr_size + 50), scan_text, fill=(102, 102, 102), font=font_small)  # Gray
 
         # Platform color bar
         bar_height = 6
