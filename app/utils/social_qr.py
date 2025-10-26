@@ -88,15 +88,15 @@ class SocialQRGenerator:
 
     def _create_solid_qr(self, qr, color, size):
         """Create solid color QR image"""
-        from qrcode.image.pil import PilImage
+        from qrcode.image.styledpil import StyledPilImage
+        from qrcode.image.styles.colormasks import SolidFillColorMask
 
         if not isinstance(color, tuple):
             color = tuple(color) if isinstance(color, (list, tuple)) else (0, 0, 0)
 
         qr_img = qr.make_image(
-            image_factory=PilImage,
-            fill_color=color,
-            back_color="white"
+            image_factory=StyledPilImage,
+            color_mask=SolidFillColorMask(back_color=(255, 255, 255), front_color=color)
         ).convert("RGBA")
 
         return qr_img.resize((size, size), self._resample_filter)
