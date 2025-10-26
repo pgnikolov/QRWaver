@@ -21,6 +21,7 @@ def index():
 def facebook_qr():
     rounded_corners = False
     use_shortlink = False
+    color_mode = 'color'
 
     if request.method == 'POST':
         try:
@@ -30,12 +31,15 @@ def facebook_qr():
             rounded_corners = 'rounded_corners' in request.form
             corner_radius = int(request.form.get('corner_radius', 40))
             qr_size = int(request.form.get('qr_size', 300))
+            color_mode = request.form.get('color_mode', 'color')
+            colorful = color_mode != 'mono'
 
             if not profile_url or not display_name:
                 flash('Please fill in all fields!', 'error')
                 return render_template('social/facebook.html',
-                                      rounded_corners=rounded_corners,
-                                      use_shortlink=use_shortlink)
+                                       rounded_corners=rounded_corners,
+                                       use_shortlink=use_shortlink,
+                                       color_mode=color_mode)
 
             qr_image, shortlink, full_url = generate_facebook_qr(
                 profile_url=profile_url,
@@ -43,7 +47,8 @@ def facebook_qr():
                 use_shortlink=use_shortlink,
                 rounded_corners=rounded_corners,
                 corner_radius=corner_radius,
-                qr_size=qr_size
+                qr_size=qr_size,
+                colorful=colorful
             )
 
             # Convert to base64 for preview
@@ -58,20 +63,23 @@ def facebook_qr():
                                    full_url=full_url,
                                    success=True,
                                    rounded_corners=rounded_corners,
-                                   use_shortlink=use_shortlink)
+                                   use_shortlink=use_shortlink,
+                                   color_mode=color_mode)
 
         except Exception as e:
             flash(f'Generation error: {str(e)}', 'error')
 
     return render_template('social/facebook.html',
-                          rounded_corners=rounded_corners,
-                          use_shortlink=use_shortlink)
+                           rounded_corners=rounded_corners,
+                           use_shortlink=use_shortlink,
+                           color_mode=color_mode)
 
 
 @bp.route('/social/instagram', methods=['GET', 'POST'])
 def instagram_qr():
     rounded_corners = False
     use_shortlink = False
+    color_mode = 'color'
 
     if request.method == 'POST':
         try:
@@ -81,12 +89,15 @@ def instagram_qr():
             rounded_corners = 'rounded_corners' in request.form
             corner_radius = int(request.form.get('corner_radius', 40))
             qr_size = int(request.form.get('qr_size', 300))
+            color_mode = request.form.get('color_mode', 'color')
+            colorful = color_mode != 'mono'
 
             if not profile_url or not display_name:
                 flash('Please fill in all fields!', 'error')
                 return render_template('social/instagram.html',
                                        rounded_corners=rounded_corners,
-                                       use_shortlink=use_shortlink)
+                                       use_shortlink=use_shortlink,
+                                       color_mode=color_mode)
 
             qr_image, shortlink, full_url = generate_instagram_qr(
                 profile_url=profile_url,
@@ -94,7 +105,8 @@ def instagram_qr():
                 use_shortlink=use_shortlink,
                 rounded_corners=rounded_corners,
                 corner_radius=corner_radius,
-                qr_size=qr_size
+                qr_size=qr_size,
+                colorful=colorful
             )
 
             # Convert to base64 for preview
@@ -109,20 +121,23 @@ def instagram_qr():
                                    full_url=full_url,
                                    success=True,
                                    rounded_corners=rounded_corners,
-                                   use_shortlink=use_shortlink)
+                                   use_shortlink=use_shortlink,
+                                   color_mode=color_mode)
 
         except Exception as e:
             flash(f'Generation error: {str(e)}', 'error')
 
     return render_template('social/instagram.html',
-                          rounded_corners=rounded_corners,
-                          use_shortlink=use_shortlink)
+                           rounded_corners=rounded_corners,
+                           use_shortlink=use_shortlink,
+                           color_mode=color_mode)
 
 
 @bp.route('/social/linkedin', methods=['GET', 'POST'])
 def linkedin_qr():
     rounded_corners = False
     use_shortlink = False
+    color_mode = 'color'
 
     if request.method == 'POST':
         try:
@@ -132,12 +147,15 @@ def linkedin_qr():
             rounded_corners = 'rounded_corners' in request.form
             corner_radius = int(request.form.get('corner_radius', 40))
             qr_size = int(request.form.get('qr_size', 300))
+            color_mode = request.form.get('color_mode', 'color')
+            colorful = color_mode != 'mono'
 
             if not profile_url or not display_name:
                 flash('Please fill in all fields!', 'error')
                 return render_template('social/linkedin.html',
-                                      rounded_corners=rounded_corners,
-                                      use_shortlink=use_shortlink)
+                                       rounded_corners=rounded_corners,
+                                       use_shortlink=use_shortlink,
+                                       color_mode=color_mode)
 
             qr_image, shortlink, full_url = generate_linkedin_qr(
                 profile_url=profile_url,
@@ -145,7 +163,8 @@ def linkedin_qr():
                 use_shortlink=use_shortlink,
                 rounded_corners=rounded_corners,
                 corner_radius=corner_radius,
-                qr_size=qr_size
+                qr_size=qr_size,
+                colorful=colorful
             )
 
             # Convert to base64 for preview
@@ -160,14 +179,16 @@ def linkedin_qr():
                                    full_url=full_url,
                                    success=True,
                                    rounded_corners=rounded_corners,
-                                   use_shortlink=use_shortlink)
+                                   use_shortlink=use_shortlink,
+                                   color_mode=color_mode)
 
         except Exception as e:
             flash(f'Generation error: {str(e)}', 'error')
 
     return render_template('social/linkedin.html',
-                          rounded_corners=rounded_corners,
-                          use_shortlink=use_shortlink)
+                           rounded_corners=rounded_corners,
+                           use_shortlink=use_shortlink,
+                           color_mode=color_mode)
 
 
 @bp.route('/download/<platform>', methods=['POST'])
@@ -179,6 +200,8 @@ def download_qr(platform):
         rounded_corners = request.form.get('rounded_corners') == 'true'
         corner_radius = int(request.form.get('corner_radius', 40))
         qr_size = int(request.form.get('qr_size', 300))
+        color_mode = request.form.get('color_mode', 'color')
+        colorful = color_mode != 'mono'
 
         if platform == 'facebook':
             qr_image, shortlink, full_url = generate_facebook_qr(
@@ -187,7 +210,8 @@ def download_qr(platform):
                 use_shortlink=use_shortlink,
                 rounded_corners=rounded_corners,
                 corner_radius=corner_radius,
-                qr_size=qr_size
+                qr_size=qr_size,
+                colorful=colorful
             )
         elif platform == 'instagram':
             qr_image, shortlink, full_url = generate_instagram_qr(
@@ -196,7 +220,8 @@ def download_qr(platform):
                 use_shortlink=use_shortlink,
                 rounded_corners=rounded_corners,
                 corner_radius=corner_radius,
-                qr_size=qr_size
+                qr_size=qr_size,
+                colorful=colorful
             )
         elif platform == 'linkedin':
             qr_image, shortlink, full_url = generate_linkedin_qr(
@@ -205,7 +230,8 @@ def download_qr(platform):
                 use_shortlink=use_shortlink,
                 rounded_corners=rounded_corners,
                 corner_radius=corner_radius,
-                qr_size=qr_size
+                qr_size=qr_size,
+                colorful=colorful
             )
         else:
             return "Invalid platform", 400
@@ -239,6 +265,7 @@ def api_generate():
         rounded_corners = data.get('rounded_corners', False)
         corner_radius = data.get('corner_radius', 40)
         qr_size = data.get('qr_size', 300)
+        colorful = data.get('colorful', True)
 
         if platform == 'facebook':
             qr_image, shortlink, full_url = generate_facebook_qr(
@@ -247,7 +274,8 @@ def api_generate():
                 use_shortlink=use_shortlink,
                 rounded_corners=rounded_corners,
                 corner_radius=corner_radius,
-                qr_size=qr_size
+                qr_size=qr_size,
+                colorful=colorful
             )
         elif platform == 'instagram':
             qr_image, shortlink, full_url = generate_instagram_qr(
@@ -256,7 +284,8 @@ def api_generate():
                 use_shortlink=use_shortlink,
                 rounded_corners=rounded_corners,
                 corner_radius=corner_radius,
-                qr_size=qr_size
+                qr_size=qr_size,
+                colorful=colorful
             )
         elif platform == 'linkedin':
             qr_image, shortlink, full_url = generate_linkedin_qr(
@@ -265,7 +294,8 @@ def api_generate():
                 use_shortlink=use_shortlink,
                 rounded_corners=rounded_corners,
                 corner_radius=corner_radius,
-                qr_size=qr_size
+                qr_size=qr_size,
+                colorful=colorful
             )
         else:
             return jsonify({'error': 'Invalid platform'}), 400

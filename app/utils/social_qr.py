@@ -42,8 +42,7 @@ class SocialQRGenerator:
 
     def generate_social_qr(self, platform, profile_url, display_name,
                            use_shortlink=True, rounded_corners=False,
-                           corner_radius=40, qr_size=300):
-
+                           corner_radius=40, qr_size=300, colorful=True):
         try:
             # Create a shortlink
             if use_shortlink:
@@ -54,7 +53,7 @@ class SocialQRGenerator:
                 qr_data = get_full_url(profile_url, platform)
 
             qr_image = self._create_base_qr(qr_data, platform, qr_size)
-            qr_image = self._add_logo(qr_image, platform, qr_size)
+            qr_image = self._create_base_qr(qr_data, platform, qr_size, colorful=colorful)
             final_image = self._add_text_section(qr_image, platform, display_name, shortlink, qr_size)
 
             if rounded_corners:
@@ -65,7 +64,7 @@ class SocialQRGenerator:
         except Exception as e:
             raise Exception(f"Error generating QR code: {str(e)}")
 
-    def _create_base_qr(self, data, platform, size):
+    def _create_base_qr(self, data, platform, size, colorful=True):
         """Creates a basic QR code with platform color"""
         qr = qrcode.QRCode(
             version=1,
@@ -75,6 +74,9 @@ class SocialQRGenerator:
         )
         qr.add_data(data)
         qr.make(fit=True)
+
+        if not colorful:
+            return self._create_solid_qr(qr, (0, 0, 0), size)
 
         colors = self.PLATFORM_COLORS.get(platform, [(0, 0, 0)])  # Black by default
 

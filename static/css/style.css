@@ -314,6 +314,12 @@ body {
     margin-bottom: 2rem;
 }
 
+.form-options.inline {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
 .checkbox-option {
     display: flex;
     align-items: center;
@@ -331,6 +337,15 @@ body {
 .checkbox-option input[type="checkbox"] {
     margin-right: 1rem;
     transform: scale(1.2);
+}
+
+.checkbox-option.radio {
+    margin-bottom: 0.5rem;
+}
+
+.checkbox-option.radio input[type="radio"] {
+    margin-right: 1rem;
+    transform: scale(1.1);
 }
 
 .option-text {
