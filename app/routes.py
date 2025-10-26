@@ -19,6 +19,9 @@ def index():
 
 @bp.route('/social/facebook', methods=['GET', 'POST'])
 def facebook_qr():
+    rounded_corners = False
+    use_shortlink = False
+
     if request.method == 'POST':
         try:
             profile_url = request.form.get('profile_url', '').strip()
@@ -30,7 +33,9 @@ def facebook_qr():
 
             if not profile_url or not display_name:
                 flash('Please fill in all fields!', 'error')
-                return render_template('social/facebook.html')
+                return render_template('social/facebook.html',
+                                      rounded_corners=rounded_corners,
+                                      use_shortlink=use_shortlink)
 
             qr_image, shortlink, full_url = generate_facebook_qr(
                 profile_url=profile_url,
@@ -51,16 +56,23 @@ def facebook_qr():
                                    qr_image=qr_base64,
                                    shortlink=shortlink,
                                    full_url=full_url,
-                                   success=True)
+                                   success=True,
+                                   rounded_corners=rounded_corners,
+                                   use_shortlink=use_shortlink)
 
         except Exception as e:
             flash(f'Generation error: {str(e)}', 'error')
 
-    return render_template('social/facebook.html')
+    return render_template('social/facebook.html',
+                          rounded_corners=rounded_corners,
+                          use_shortlink=use_shortlink)
 
 
 @bp.route('/social/instagram', methods=['GET', 'POST'])
 def instagram_qr():
+    rounded_corners = False
+    use_shortlink = False
+
     if request.method == 'POST':
         try:
             profile_url = request.form.get('profile_url', '').strip()
@@ -72,7 +84,9 @@ def instagram_qr():
 
             if not profile_url or not display_name:
                 flash('Please fill in all fields!', 'error')
-                return render_template('social/instagram.html')
+                return render_template('social/instagram.html',
+                                       rounded_corners=rounded_corners,
+                                       use_shortlink=use_shortlink)
 
             qr_image, shortlink, full_url = generate_instagram_qr(
                 profile_url=profile_url,
@@ -93,16 +107,23 @@ def instagram_qr():
                                    qr_image=qr_base64,
                                    shortlink=shortlink,
                                    full_url=full_url,
-                                   success=True)
+                                   success=True,
+                                   rounded_corners=rounded_corners,
+                                   use_shortlink=use_shortlink)
 
         except Exception as e:
             flash(f'Generation error: {str(e)}', 'error')
 
-    return render_template('social/instagram.html')
+    return render_template('social/instagram.html',
+                          rounded_corners=rounded_corners,
+                          use_shortlink=use_shortlink)
 
 
 @bp.route('/social/linkedin', methods=['GET', 'POST'])
 def linkedin_qr():
+    rounded_corners = False
+    use_shortlink = False
+
     if request.method == 'POST':
         try:
             profile_url = request.form.get('profile_url', '').strip()
@@ -114,7 +135,9 @@ def linkedin_qr():
 
             if not profile_url or not display_name:
                 flash('Please fill in all fields!', 'error')
-                return render_template('social/linkedin.html')
+                return render_template('social/linkedin.html',
+                                      rounded_corners=rounded_corners,
+                                      use_shortlink=use_shortlink)
 
             qr_image, shortlink, full_url = generate_linkedin_qr(
                 profile_url=profile_url,
@@ -135,12 +158,16 @@ def linkedin_qr():
                                    qr_image=qr_base64,
                                    shortlink=shortlink,
                                    full_url=full_url,
-                                   success=True)
+                                   success=True,
+                                   rounded_corners=rounded_corners,
+                                   use_shortlink=use_shortlink)
 
         except Exception as e:
             flash(f'Generation error: {str(e)}', 'error')
 
-    return render_template('social/linkedin.html')
+    return render_template('social/linkedin.html',
+                          rounded_corners=rounded_corners,
+                          use_shortlink=use_shortlink)
 
 
 @bp.route('/download/<platform>', methods=['POST'])
@@ -148,8 +175,8 @@ def download_qr(platform):
     try:
         profile_url = request.form.get('profile_url')
         display_name = request.form.get('display_name')
-        use_shortlink = 'use_shortlink' in request.form
-        rounded_corners = 'rounded_corners' in request.form
+        use_shortlink = request.form.get('use_shortlink') == 'true'
+        rounded_corners = request.form.get('rounded_corners') == 'true'
         corner_radius = int(request.form.get('corner_radius', 40))
         qr_size = int(request.form.get('qr_size', 300))
 

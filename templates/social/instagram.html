@@ -38,13 +38,13 @@
 
                 <div class="form-options">
                     <label class="checkbox-option">
-                        <input type="checkbox" name="use_shortlink" id="use_shortlink" value="true">
+                        <input type="checkbox" name="use_shortlink" id="use_shortlink" value="true" {% if use_shortlink %}checked{% endif %}>
                         <span class="checkmark"></span>
                         <span class="option-text">Use shortlink (instagram.com/username)</span>
                     </label>
 
                     <label class="checkbox-option">
-                        <input type="checkbox" name="rounded_corners" id="rounded_corners">
+                        <input type="checkbox" name="rounded_corners" id="rounded_corners" value="true" {% if rounded_corners %}checked{% endif %}>
                         <span class="checkmark"></span>
                         <span class="option-text">Rounded corners</span>
                     </label>
@@ -82,7 +82,7 @@
             <div class="qr-preview">
                 <img src="data:image/png;base64,{{ qr_image }}"
                      alt="Instagram QR Code"
-                     class="qr-image">
+                     class="qr-image{% if rounded_corners %} rounded{% endif %}">
             </div>
 
             {% if shortlink %}
@@ -101,8 +101,8 @@
             <form method="POST" action="{{ url_for('main.download_qr', platform='instagram') }}" class="download-form">
                 <input type="hidden" name="profile_url" value="{{ request.form.profile_url }}">
                 <input type="hidden" name="display_name" value="{{ request.form.display_name }}">
-                <input type="hidden" name="use_shortlink" value="{{ 'true' if request.form.use_shortlink else 'false' }}">
-                <input type="hidden" name="rounded_corners" value="{{ 'true' if request.form.rounded_corners else 'false' }}">
+                <input type="hidden" name="use_shortlink" value="{{ 'true' if use_shortlink else 'false' }}">
+                <input type="hidden" name="rounded_corners" value="{{ 'true' if rounded_corners else 'false' }}">
                 <input type="hidden" name="corner_radius" value="{{ request.form.corner_radius or '40' }}">
                 <input type="hidden" name="qr_size" value="{{ request.form.qr_size or '300' }}">
 
