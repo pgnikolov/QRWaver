@@ -19,11 +19,11 @@ class SocialQRGenerator:
             (88, 81, 219),  # Indigo
             (131, 58, 180),  # Purple
             (193, 53, 132),  # Magenta
-            (225, 48, 108)   # Pink
+            (225, 48, 108)  # Pink
         ],
         "linkedin": (34, 89, 130),  # LinkedIn blue
         "twitter": (29, 161, 242),  # Twitter blue
-        "youtube": (255, 0, 0)      # YouTube red
+        "youtube": (255, 0, 0)  # YouTube red
     }
 
     def __init__(self):
@@ -36,20 +36,14 @@ class SocialQRGenerator:
             "linkedin": logos_root / "linkedin_logo.png"
         }
 
-    def generate_social_qr(
-        self,
-        platform,
-        profile_url,
-        display_name,
-        use_shortlink=True,
-        rounded_corners=False,
-        corner_radius=40,
-        qr_size=300,
-        colorful=True
-    ):
+    def generate_social_qr(self, platform, profile_url, display_name,
+                           use_shortlink=True, rounded_corners=False,
+                           corner_radius=40, qr_size=300, colorful=True):
         """Main QR generation logic"""
         try:
-            # 1️⃣ Decide what goes into the QR
+            platform = platform.strip().lower()
+
+            # Create a shortlink or use full URL
             if use_shortlink:
                 shortlink = create_social_shortlink(profile_url, platform)
                 qr_data = get_full_url(shortlink, platform)
@@ -57,16 +51,12 @@ class SocialQRGenerator:
                 shortlink = None
                 qr_data = get_full_url(profile_url, platform)
 
-            # 2️⃣ Generate the QR in the correct color
             qr_image = self._create_base_qr(qr_data, platform, qr_size, colorful=colorful)
 
-            # 3️⃣ Add the logo in the center
+            # Add logo and text section
             qr_with_logo = self._add_logo(qr_image, platform, qr_size)
-
-            # 4️⃣ Add the text section (display name, link, etc.)
             final_image = self._add_text_section(qr_with_logo, platform, display_name, shortlink, qr_size)
 
-            # 5️⃣ Apply rounded corners if needed
             if rounded_corners:
                 final_image = add_rounded_corners(final_image, corner_radius)
 
@@ -74,10 +64,6 @@ class SocialQRGenerator:
 
         except Exception as e:
             raise Exception(f"Error generating QR code: {str(e)}")
-
-    # --------------------------------------------------------------------------
-    # INTERNAL HELPERS
-    # --------------------------------------------------------------------------
 
     def _create_base_qr(self, data, platform, size, colorful=True):
         """Creates a QR code image with optional platform color or gradient"""
@@ -102,9 +88,17 @@ class SocialQRGenerator:
 
     def _create_solid_qr(self, qr, color, size):
         """Create solid color QR image"""
+        from qrcode.image.pil import PilImage
+
         if not isinstance(color, tuple):
             color = tuple(color) if isinstance(color, (list, tuple)) else (0, 0, 0)
-        qr_img = qr.make_image(fill_color=color, back_color="white").convert("RGBA")
+
+        qr_img = qr.make_image(
+            image_factory=PilImage,
+            fill_color=color,
+            back_color="white"
+        ).convert("RGBA")
+
         return qr_img.resize((size, size), self._resample_filter)
 
     def _create_gradient_qr(self, qr, colors, size):
@@ -250,10 +244,6 @@ class SocialQRGenerator:
                 self.__resample_filter = Image.LANCZOS
         return self.__resample_filter
 
-
-# --------------------------------------------------------------------------
-# Exported functions for routes
-# --------------------------------------------------------------------------
 
 def generate_facebook_qr(profile_url, display_name, **kwargs):
     generator = SocialQRGenerator()

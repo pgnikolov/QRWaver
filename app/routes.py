@@ -25,14 +25,15 @@ def facebook_qr():
 
     if request.method == 'POST':
         try:
+
             profile_url = request.form.get('profile_url', '').strip()
             display_name = request.form.get('display_name', '').strip()
             use_shortlink = 'use_shortlink' in request.form
             rounded_corners = 'rounded_corners' in request.form
             corner_radius = int(request.form.get('corner_radius', 40))
             qr_size = int(request.form.get('qr_size', 300))
-            color_mode = request.form.get('color_mode', 'color')
-            colorful = color_mode != 'mono'
+            color_mode = (request.form.get('color_mode') or 'color').strip().lower()
+            colorful = not color_mode.startswith('mono')
 
             if not profile_url or not display_name:
                 flash('Please fill in all fields!', 'error')
@@ -89,9 +90,8 @@ def instagram_qr():
             rounded_corners = 'rounded_corners' in request.form
             corner_radius = int(request.form.get('corner_radius', 40))
             qr_size = int(request.form.get('qr_size', 300))
-            color_mode = request.form.get('color_mode', 'color')
-            colorful = color_mode != 'mono'
-
+            color_mode = (request.form.get('color_mode') or 'color').strip().lower()
+            colorful = not color_mode.startswith('mono')
             if not profile_url or not display_name:
                 flash('Please fill in all fields!', 'error')
                 return render_template('social/instagram.html',
@@ -147,8 +147,8 @@ def linkedin_qr():
             rounded_corners = 'rounded_corners' in request.form
             corner_radius = int(request.form.get('corner_radius', 40))
             qr_size = int(request.form.get('qr_size', 300))
-            color_mode = request.form.get('color_mode', 'color')
-            colorful = color_mode != 'mono'
+            color_mode = (request.form.get('color_mode') or 'color').strip().lower()
+            colorful = not color_mode.startswith('mono')
 
             if not profile_url or not display_name:
                 flash('Please fill in all fields!', 'error')
@@ -200,8 +200,8 @@ def download_qr(platform):
         rounded_corners = request.form.get('rounded_corners') == 'true'
         corner_radius = int(request.form.get('corner_radius', 40))
         qr_size = int(request.form.get('qr_size', 300))
-        color_mode = request.form.get('color_mode', 'color')
-        colorful = color_mode != 'mono'
+        color_mode = (request.form.get('color_mode') or 'color').strip().lower()
+        colorful = not color_mode.startswith('mono')
 
         if platform == 'facebook':
             qr_image, shortlink, full_url = generate_facebook_qr(
