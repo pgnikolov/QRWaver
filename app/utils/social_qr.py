@@ -1,3 +1,4 @@
+from pathlib import Path
 import qrcode
 from PIL import Image, ImageDraw, ImageFont
 from .style_utils import add_rounded_corners
@@ -8,43 +9,47 @@ class SocialQRGenerator:
     """
     Handles the generation of social media QR codes with customizable options, such as logos, colors, text,
     and layout adjustments.
-
-    The class is designed to create visually appealing and platform-specific QR codes for social media
-    profiles, where each platform has dedicated colors and branding. Developers can use this class to
-    generate QR codes with added features such as logos, gradient colors, rounded corners, and informative
-    text sections.
-
-    :ivar logo_paths: A dictionary mapping supported platforms to their logo file paths.
-    :type logo_paths: dict
     """
 
     # Platform colors in RGB format
     PLATFORM_COLORS = {
         "facebook": (63, 92, 153),  # Facebook blue
         "instagram": [
-            (64, 93, 230),  # Instagram blue
-            (88, 81, 219),  # Instagram purple-blue
-            (131, 58, 180),  # Instagram purple
-            (193, 53, 132),  # Instagram magenta
-            (225, 48, 108)  # Instagram pink
+            (64, 93, 230),  # Blue
+            (88, 81, 219),  # Indigo
+            (131, 58, 180),  # Purple
+            (193, 53, 132),  # Magenta
+            (225, 48, 108)   # Pink
         ],
         "linkedin": (34, 89, 130),  # LinkedIn blue
         "twitter": (29, 161, 242),  # Twitter blue
-        "youtube": (255, 0, 0)  # YouTube red
+        "youtube": (255, 0, 0)      # YouTube red
     }
 
     def __init__(self):
+        project_root = Path(__file__).resolve().parents[2]
+        logos_root = project_root / "static" / "images" / "logos"
+
         self.logo_paths = {
-            "facebook": "static/images/logos/facebook_logo.png",
-            "instagram": "static/images/logos/instagram_logo.png",
-            "linkedin": "static/images/logos/linkedin_logo.png"
+            "facebook": logos_root / "facebook_logo.png",
+            "instagram": logos_root / "instagram_logo.png",
+            "linkedin": logos_root / "linkedin_logo.png"
         }
 
-    def generate_social_qr(self, platform, profile_url, display_name,
-                           use_shortlink=True, rounded_corners=False,
-                           corner_radius=40, qr_size=300, colorful=True):
+    def generate_social_qr(
+        self,
+        platform,
+        profile_url,
+        display_name,
+        use_shortlink=True,
+        rounded_corners=False,
+        corner_radius=40,
+        qr_size=300,
+        colorful=True
+    ):
+        """Main QR generation logic"""
         try:
-            # Create a shortlink
+            # 1️⃣ Decide what goes into the QR
             if use_shortlink:
                 shortlink = create_social_shortlink(profile_url, platform)
                 qr_data = get_full_url(shortlink, platform)
@@ -52,10 +57,16 @@ class SocialQRGenerator:
                 shortlink = None
                 qr_data = get_full_url(profile_url, platform)
 
-            qr_image = self._create_base_qr(qr_data, platform, qr_size)
+            # 2️⃣ Generate the QR in the correct color
             qr_image = self._create_base_qr(qr_data, platform, qr_size, colorful=colorful)
-            final_image = self._add_text_section(qr_image, platform, display_name, shortlink, qr_size)
 
+            # 3️⃣ Add the logo in the center
+            qr_with_logo = self._add_logo(qr_image, platform, qr_size)
+
+            # 4️⃣ Add the text section (display name, link, etc.)
+            final_image = self._add_text_section(qr_with_logo, platform, display_name, shortlink, qr_size)
+
+            # 5️⃣ Apply rounded corners if needed
             if rounded_corners:
                 final_image = add_rounded_corners(final_image, corner_radius)
 
@@ -64,8 +75,12 @@ class SocialQRGenerator:
         except Exception as e:
             raise Exception(f"Error generating QR code: {str(e)}")
 
+    # --------------------------------------------------------------------------
+    # INTERNAL HELPERS
+    # --------------------------------------------------------------------------
+
     def _create_base_qr(self, data, platform, size, colorful=True):
-        """Creates a basic QR code with platform color"""
+        """Creates a QR code image with optional platform color or gradient"""
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_H,
@@ -75,33 +90,30 @@ class SocialQRGenerator:
         qr.add_data(data)
         qr.make(fit=True)
 
-        if not colorful:
-            return self._create_solid_qr(qr, (0, 0, 0), size)
-
-        colors = self.PLATFORM_COLORS.get(platform, [(0, 0, 0)])  # Black by default
-
-        if platform == "instagram" and len(colors) > 1:
-            return self._create_gradient_qr(qr, colors, size)
+        if colorful:
+            platform_colors = self.PLATFORM_COLORS.get(platform)
+            if platform == "instagram" and platform_colors and len(platform_colors) > 1:
+                return self._create_gradient_qr(qr, platform_colors, size)
+            fill_color = self._get_platform_color(platform)
         else:
-            main_color = colors[0] if isinstance(colors[0], tuple) else colors
-            return self._create_solid_qr(qr, main_color, size)
+            fill_color = (0, 0, 0)
+
+        return self._create_solid_qr(qr, fill_color, size)
 
     def _create_solid_qr(self, qr, color, size):
-        if isinstance(color, tuple):
-            fill_color = color
-        else:
-            fill_color = (0, 0, 0)  # Black by default
-
-        qr_img = qr.make_image(fill_color=fill_color, back_color="white")
-        return qr_img.resize((size, size))
+        """Create solid color QR image"""
+        if not isinstance(color, tuple):
+            color = tuple(color) if isinstance(color, (list, tuple)) else (0, 0, 0)
+        qr_img = qr.make_image(fill_color=color, back_color="white").convert("RGBA")
+        return qr_img.resize((size, size), self._resample_filter)
 
     def _create_gradient_qr(self, qr, colors, size):
+        """Create a gradient QR for Instagram"""
         qr_modules = qr.get_matrix()
         box_size = 10
         border = 4
         width = len(qr_modules) * box_size + 2 * border * box_size
-
-        qr_img = Image.new('RGB', (width, width), 'white')
+        qr_img = Image.new('RGBA', (width, width), (255, 255, 255, 255))
         draw = ImageDraw.Draw(qr_img)
 
         for y, row in enumerate(qr_modules):
@@ -109,7 +121,6 @@ class SocialQRGenerator:
                 if module:
                     color_index = (x + y) % len(colors)
                     color = colors[color_index]
-
                     x_pos = x * box_size + border * box_size
                     y_pos = y * box_size + border * box_size
                     draw.rectangle(
@@ -117,9 +128,10 @@ class SocialQRGenerator:
                         fill=color
                     )
 
-        return qr_img.resize((size, size))
+        return qr_img.resize((size, size), self._resample_filter)
 
     def _add_logo(self, qr_image, platform, qr_size):
+        """Adds the platform logo in the center of the QR"""
         try:
             logo_path = self.logo_paths.get(platform)
             logo_img = Image.open(logo_path).convert('RGBA')
@@ -127,10 +139,11 @@ class SocialQRGenerator:
             logo_img = self._create_fallback_logo(platform)
 
         logo_size = qr_size // 5
-        logo_img = logo_img.resize((logo_size, logo_size), Image.Resampling.LANCZOS)
+        logo_img = logo_img.resize((logo_size, logo_size), self._resample_filter)
 
+        # White background behind the logo
         logo_bg_size = logo_size + 20
-        logo_bg = Image.new('RGB', (logo_bg_size, logo_bg_size), 'white')
+        logo_bg = Image.new('RGBA', (logo_bg_size, logo_bg_size), (255, 255, 255, 255))
         logo_pos = ((logo_bg_size - logo_size) // 2, (logo_bg_size - logo_size) // 2)
 
         if logo_img.mode == 'RGBA':
@@ -139,19 +152,20 @@ class SocialQRGenerator:
             logo_bg.paste(logo_img, logo_pos)
 
         qr_pos = ((qr_size - logo_bg_size) // 2, (qr_size - logo_bg_size) // 2)
-        qr_image.paste(logo_bg, qr_pos)
+        qr_with_alpha = qr_image.convert('RGBA')
+        qr_with_alpha.paste(logo_bg, qr_pos, logo_bg)
 
-        return qr_image
+        return qr_with_alpha
 
     def _add_text_section(self, qr_image, platform, display_name, shortlink, qr_size):
+        """Adds text and branding under the QR"""
         text_height = 120
         total_height = qr_size + text_height
-
         final_img = Image.new('RGB', (qr_size, total_height), 'white')
-        final_img.paste(qr_image, (0, 0))
-
+        final_img.paste(qr_image.convert('RGB'), (0, 0))
         draw = ImageDraw.Draw(final_img)
 
+        # Fonts
         try:
             font_large = ImageFont.truetype("arialbd.ttf", 24)
             font_medium = ImageFont.truetype("arial.ttf", 16)
@@ -159,29 +173,27 @@ class SocialQRGenerator:
         except:
             font_large = font_medium = font_small = ImageFont.load_default()
 
-        platform_color = self.PLATFORM_COLORS.get(platform, [(0, 0, 0)])[0]
+        platform_color = self._get_platform_color(platform)
 
         # Display name
         name_width = draw.textlength(display_name, font=font_large)
         name_x = (qr_size - name_width) // 2
         draw.text((name_x, qr_size + 15), display_name, fill=platform_color, font=font_large)
 
-        # Shortlink
+        # Shortlink and scan text
+        scan_text = self._get_scan_text(platform)
         if shortlink:
             shortlink_width = draw.textlength(shortlink, font=font_medium)
             shortlink_x = (qr_size - shortlink_width) // 2
-            draw.text((shortlink_x, qr_size + 50), shortlink, fill=(51, 51, 51), font=font_medium)  # Dark gray
+            draw.text((shortlink_x, qr_size + 50), shortlink, fill=(51, 51, 51), font=font_medium)
 
-            # Scan text
-            scan_text = self._get_scan_text(platform)
             scan_width = draw.textlength(scan_text, font=font_small)
             scan_x = (qr_size - scan_width) // 2
-            draw.text((scan_x, qr_size + 80), scan_text, fill=(102, 102, 102), font=font_small)  # Gray
+            draw.text((scan_x, qr_size + 80), scan_text, fill=(102, 102, 102), font=font_small)
         else:
-            scan_text = self._get_scan_text(platform)
             scan_width = draw.textlength(scan_text, font=font_small)
             scan_x = (qr_size - scan_width) // 2
-            draw.text((scan_x, qr_size + 50), scan_text, fill=(102, 102, 102), font=font_small)  # Gray
+            draw.text((scan_x, qr_size + 60), scan_text, fill=(102, 102, 102), font=font_small)
 
         # Platform color bar
         bar_height = 6
@@ -201,10 +213,11 @@ class SocialQRGenerator:
         return texts.get(platform, "Scan QR code")
 
     def _create_fallback_logo(self, platform):
+        """Simple drawn fallback if no logo found"""
         size = 80
         logo = Image.new('RGBA', (size, size), (0, 0, 0, 0))
         draw = ImageDraw.Draw(logo)
-        color = self.PLATFORM_COLORS.get(platform, [(0, 0, 0)])[0]
+        color = self._get_platform_color(platform)
 
         if platform == "facebook":
             draw.rectangle([20, 10, 60, 70], fill=color)
@@ -219,6 +232,28 @@ class SocialQRGenerator:
 
         return logo
 
+    def _get_platform_color(self, platform):
+        colors = self.PLATFORM_COLORS.get(platform)
+        if isinstance(colors, list):
+            return colors[0]
+        if isinstance(colors, tuple):
+            return colors
+        return (0, 0, 0)
+
+    @property
+    def _resample_filter(self):
+        if not hasattr(self, "__resample_filter"):
+            resampling = getattr(Image, "Resampling", None)
+            if resampling is not None:
+                self.__resample_filter = resampling.LANCZOS
+            else:
+                self.__resample_filter = Image.LANCZOS
+        return self.__resample_filter
+
+
+# --------------------------------------------------------------------------
+# Exported functions for routes
+# --------------------------------------------------------------------------
 
 def generate_facebook_qr(profile_url, display_name, **kwargs):
     generator = SocialQRGenerator()
