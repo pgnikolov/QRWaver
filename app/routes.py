@@ -12,17 +12,23 @@ qr_generator = SocialQRGenerator()
 
 SUPPORTED = {'facebook', 'instagram', 'linkedin'}
 
+
 @bp.route('/')
 def index():
     return render_template('index.html')
 
+
 @bp.route('/social/<platform>', methods=['GET', 'POST'])
 def social_qr(platform: str):
+    """
+    Handles QR code generation for social media platforms.
+    Supports both GET (form display) and POST (QR generation) requests.
+    """
     platform = (platform or '').strip().lower()
     if platform not in SUPPORTED:
         abort(404)
 
-    # UI switches defaults
+    # Default UI state
     rounded_corners = False
     use_shortlink = False
     color_mode = 'color'
@@ -34,11 +40,11 @@ def social_qr(platform: str):
             profile_url = (request.form.get('profile_url') or '').strip()
             display_name = (request.form.get('display_name') or '').strip()
 
-            # boolean fields
+            # Boolean switches
             use_shortlink = 'use_shortlink' in request.form
             rounded_corners = 'rounded_corners' in request.form
 
-            # numeric/safe bounds
+            # Numeric values (validated safely)
             try:
                 corner_radius = int(request.form.get('corner_radius', settings.DEFAULT_CORNER_RADIUS))
             except ValueError:
@@ -48,10 +54,13 @@ def social_qr(platform: str):
             except ValueError:
                 qr_size = settings.DEFAULT_QR_SIZE
 
+            # Color mode (radio buttons)
             color_mode = (request.form.get('color_mode') or 'color').strip().lower()
-            colorful = not color_mode.startswith('mono')
+            if color_mode not in {'color', 'mono'}:
+                color_mode = 'color'
+            colorful = (color_mode == 'color')
 
-            # validate inputs (service layer)
+            # Validate inputs
             errors = qr_service.validate_social_input(platform, profile_url, display_name)
             if errors:
                 for msg in errors:
@@ -64,7 +73,7 @@ def social_qr(platform: str):
                     color_mode=color_mode,
                 )
 
-            # generate
+            # Generate QR code
             img, shortlink, full_url = qr_generator.generate_social_qr(
                 platform=platform,
                 profile_url=profile_url,
@@ -76,7 +85,7 @@ def social_qr(platform: str):
                 colorful=colorful,
             )
 
-            # preview as base64
+            # Convert image to base64 for preview
             buf = BytesIO()
             img.save(buf, 'PNG', quality=95)
             buf.seek(0)
@@ -86,6 +95,7 @@ def social_qr(platform: str):
         except Exception as e:
             flash(f'Generation error: {str(e)}', 'error')
 
+    # ✅ FIX: ensure color_mode reflects current POST value
     return render_template(
         'social/_social.html',
         platform=platform,
@@ -95,11 +105,15 @@ def social_qr(platform: str):
         full_url=full_url,
         rounded_corners=rounded_corners,
         use_shortlink=use_shortlink,
-        color_mode=color_mode,
+        color_mode=request.form.get('color_mode', color_mode),
     )
+
 
 @bp.route('/download/<platform>', methods=['POST'])
 def download_qr(platform: str):
+    """
+    Handles QR code file download (PNG).
+    """
     platform = (platform or '').strip().lower()
     if platform not in SUPPORTED:
         return "Invalid platform", 400
@@ -110,6 +124,7 @@ def download_qr(platform: str):
         use_shortlink = request.form.get('use_shortlink') == 'true'
         rounded_corners = request.form.get('rounded_corners') == 'true'
 
+        # Numeric safety
         try:
             corner_radius = int(request.form.get('corner_radius', settings.DEFAULT_CORNER_RADIUS))
         except ValueError:
@@ -119,13 +134,18 @@ def download_qr(platform: str):
         except ValueError:
             qr_size = settings.DEFAULT_QR_SIZE
 
+        # Fix color mode (radio input)
         color_mode = (request.form.get('color_mode') or 'color').strip().lower()
-        colorful = not color_mode.startswith('mono')
+        if color_mode not in {'color', 'mono'}:
+            color_mode = 'color'
+        colorful = (color_mode == 'color')
 
+        # Validate inputs
         errors = qr_service.validate_social_input(platform, profile_url, display_name)
         if errors:
             return " | ".join(errors), 400
 
+        # Generate and send file
         img, shortlink, full_url = qr_generator.generate_social_qr(
             platform=platform,
             profile_url=profile_url,
@@ -151,8 +171,13 @@ def download_qr(platform: str):
     except Exception as e:
         return f"Error: {str(e)}", 500
 
+
 @bp.route('/api/generate', methods=['POST'])
 def api_generate():
+    """
+    JSON API endpoint for programmatic QR generation.
+    Returns Base64-encoded image and shortlink metadata.
+    """
     try:
         data = request.get_json(force=True) or {}
         platform = (data.get('platform') or '').strip().lower()
@@ -183,7 +208,7 @@ def api_generate():
             colorful=colorful,
         )
 
-        # to base64
+        # Convert to base64 for API response
         buf = BytesIO()
         img.save(buf, 'PNG')
         buf.seek(0)
