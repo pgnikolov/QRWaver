@@ -1,317 +1,199 @@
-from flask import Blueprint, render_template, request, send_file, flash, jsonify
+from flask import Blueprint, render_template, request, send_file, flash, jsonify, abort
 from io import BytesIO
 import base64
-from app.utils.social_qr import (
-    generate_facebook_qr,
-    generate_instagram_qr,
-    generate_linkedin_qr,
-    SocialQRGenerator
-)
+
+from app.config import settings
+from app.services.qr_service import QRService
+from app.utils.social_qr import SocialQRGenerator
 
 bp = Blueprint('main', __name__)
+qr_service = QRService()
 qr_generator = SocialQRGenerator()
 
+SUPPORTED = {'facebook', 'instagram', 'linkedin'}
 
 @bp.route('/')
 def index():
     return render_template('index.html')
 
+@bp.route('/social/<platform>', methods=['GET', 'POST'])
+def social_qr(platform: str):
+    platform = (platform or '').strip().lower()
+    if platform not in SUPPORTED:
+        abort(404)
 
-@bp.route('/social/facebook', methods=['GET', 'POST'])
-def facebook_qr():
+    # UI switches defaults
     rounded_corners = False
     use_shortlink = False
     color_mode = 'color'
+    success = False
+    qr_base64 = shortlink = full_url = None
 
     if request.method == 'POST':
         try:
+            profile_url = (request.form.get('profile_url') or '').strip()
+            display_name = (request.form.get('display_name') or '').strip()
 
-            profile_url = request.form.get('profile_url', '').strip()
-            display_name = request.form.get('display_name', '').strip()
+            # boolean fields
             use_shortlink = 'use_shortlink' in request.form
             rounded_corners = 'rounded_corners' in request.form
-            corner_radius = int(request.form.get('corner_radius', 40))
-            qr_size = int(request.form.get('qr_size', 300))
+
+            # numeric/safe bounds
+            try:
+                corner_radius = int(request.form.get('corner_radius', settings.DEFAULT_CORNER_RADIUS))
+            except ValueError:
+                corner_radius = settings.DEFAULT_CORNER_RADIUS
+            try:
+                qr_size = int(request.form.get('qr_size', settings.DEFAULT_QR_SIZE))
+            except ValueError:
+                qr_size = settings.DEFAULT_QR_SIZE
+
             color_mode = (request.form.get('color_mode') or 'color').strip().lower()
             colorful = not color_mode.startswith('mono')
 
-            if not profile_url or not display_name:
-                flash('Please fill in all fields!', 'error')
-                return render_template('social/facebook.html',
-                                       rounded_corners=rounded_corners,
-                                       use_shortlink=use_shortlink,
-                                       color_mode=color_mode)
+            # validate inputs (service layer)
+            errors = qr_service.validate_social_input(platform, profile_url, display_name)
+            if errors:
+                for msg in errors:
+                    flash(msg, 'error')
+                return render_template(
+                    'social/_social.html',
+                    platform=platform,
+                    rounded_corners=rounded_corners,
+                    use_shortlink=use_shortlink,
+                    color_mode=color_mode,
+                )
 
-            qr_image, shortlink, full_url = generate_facebook_qr(
+            # generate
+            img, shortlink, full_url = qr_generator.generate_social_qr(
+                platform=platform,
                 profile_url=profile_url,
                 display_name=display_name,
                 use_shortlink=use_shortlink,
                 rounded_corners=rounded_corners,
                 corner_radius=corner_radius,
                 qr_size=qr_size,
-                colorful=colorful
+                colorful=colorful,
             )
 
-            # Convert to base64 for preview
-            img_io = BytesIO()
-            qr_image.save(img_io, 'PNG', quality=95)
-            img_io.seek(0)
-            qr_base64 = base64.b64encode(img_io.getvalue()).decode()
-
-            return render_template('social/facebook.html',
-                                   qr_image=qr_base64,
-                                   shortlink=shortlink,
-                                   full_url=full_url,
-                                   success=True,
-                                   rounded_corners=rounded_corners,
-                                   use_shortlink=use_shortlink,
-                                   color_mode=color_mode)
+            # preview as base64
+            buf = BytesIO()
+            img.save(buf, 'PNG', quality=95)
+            buf.seek(0)
+            qr_base64 = base64.b64encode(buf.getvalue()).decode('ascii')
+            success = True
 
         except Exception as e:
             flash(f'Generation error: {str(e)}', 'error')
 
-    return render_template('social/facebook.html',
-                           rounded_corners=rounded_corners,
-                           use_shortlink=use_shortlink,
-                           color_mode=color_mode)
-
-
-@bp.route('/social/instagram', methods=['GET', 'POST'])
-def instagram_qr():
-    rounded_corners = False
-    use_shortlink = False
-    color_mode = 'color'
-
-    if request.method == 'POST':
-        try:
-            profile_url = request.form.get('profile_url', '').strip()
-            display_name = request.form.get('display_name', '').strip()
-            use_shortlink = 'use_shortlink' in request.form
-            rounded_corners = 'rounded_corners' in request.form
-            corner_radius = int(request.form.get('corner_radius', 40))
-            qr_size = int(request.form.get('qr_size', 300))
-            color_mode = (request.form.get('color_mode') or 'color').strip().lower()
-            colorful = not color_mode.startswith('mono')
-            if not profile_url or not display_name:
-                flash('Please fill in all fields!', 'error')
-                return render_template('social/instagram.html',
-                                       rounded_corners=rounded_corners,
-                                       use_shortlink=use_shortlink,
-                                       color_mode=color_mode)
-
-            qr_image, shortlink, full_url = generate_instagram_qr(
-                profile_url=profile_url,
-                display_name=display_name,
-                use_shortlink=use_shortlink,
-                rounded_corners=rounded_corners,
-                corner_radius=corner_radius,
-                qr_size=qr_size,
-                colorful=colorful
-            )
-
-            # Convert to base64 for preview
-            img_io = BytesIO()
-            qr_image.save(img_io, 'PNG', quality=95)
-            img_io.seek(0)
-            qr_base64 = base64.b64encode(img_io.getvalue()).decode()
-
-            return render_template('social/instagram.html',
-                                   qr_image=qr_base64,
-                                   shortlink=shortlink,
-                                   full_url=full_url,
-                                   success=True,
-                                   rounded_corners=rounded_corners,
-                                   use_shortlink=use_shortlink,
-                                   color_mode=color_mode)
-
-        except Exception as e:
-            flash(f'Generation error: {str(e)}', 'error')
-
-    return render_template('social/instagram.html',
-                           rounded_corners=rounded_corners,
-                           use_shortlink=use_shortlink,
-                           color_mode=color_mode)
-
-
-@bp.route('/social/linkedin', methods=['GET', 'POST'])
-def linkedin_qr():
-    rounded_corners = False
-    use_shortlink = False
-    color_mode = 'color'
-
-    if request.method == 'POST':
-        try:
-            profile_url = request.form.get('profile_url', '').strip()
-            display_name = request.form.get('display_name', '').strip()
-            use_shortlink = 'use_shortlink' in request.form
-            rounded_corners = 'rounded_corners' in request.form
-            corner_radius = int(request.form.get('corner_radius', 40))
-            qr_size = int(request.form.get('qr_size', 300))
-            color_mode = (request.form.get('color_mode') or 'color').strip().lower()
-            colorful = not color_mode.startswith('mono')
-
-            if not profile_url or not display_name:
-                flash('Please fill in all fields!', 'error')
-                return render_template('social/linkedin.html',
-                                       rounded_corners=rounded_corners,
-                                       use_shortlink=use_shortlink,
-                                       color_mode=color_mode)
-
-            qr_image, shortlink, full_url = generate_linkedin_qr(
-                profile_url=profile_url,
-                display_name=display_name,
-                use_shortlink=use_shortlink,
-                rounded_corners=rounded_corners,
-                corner_radius=corner_radius,
-                qr_size=qr_size,
-                colorful=colorful
-            )
-
-            # Convert to base64 for preview
-            img_io = BytesIO()
-            qr_image.save(img_io, 'PNG', quality=95)
-            img_io.seek(0)
-            qr_base64 = base64.b64encode(img_io.getvalue()).decode()
-
-            return render_template('social/linkedin.html',
-                                   qr_image=qr_base64,
-                                   shortlink=shortlink,
-                                   full_url=full_url,
-                                   success=True,
-                                   rounded_corners=rounded_corners,
-                                   use_shortlink=use_shortlink,
-                                   color_mode=color_mode)
-
-        except Exception as e:
-            flash(f'Generation error: {str(e)}', 'error')
-
-    return render_template('social/linkedin.html',
-                           rounded_corners=rounded_corners,
-                           use_shortlink=use_shortlink,
-                           color_mode=color_mode)
-
+    return render_template(
+        'social/_social.html',
+        platform=platform,
+        success=success,
+        qr_image=qr_base64,
+        shortlink=shortlink,
+        full_url=full_url,
+        rounded_corners=rounded_corners,
+        use_shortlink=use_shortlink,
+        color_mode=color_mode,
+    )
 
 @bp.route('/download/<platform>', methods=['POST'])
-def download_qr(platform):
+def download_qr(platform: str):
+    platform = (platform or '').strip().lower()
+    if platform not in SUPPORTED:
+        return "Invalid platform", 400
+
     try:
-        profile_url = request.form.get('profile_url')
-        display_name = request.form.get('display_name')
+        profile_url = (request.form.get('profile_url') or '').strip()
+        display_name = (request.form.get('display_name') or '').strip()
         use_shortlink = request.form.get('use_shortlink') == 'true'
         rounded_corners = request.form.get('rounded_corners') == 'true'
-        corner_radius = int(request.form.get('corner_radius', 40))
-        qr_size = int(request.form.get('qr_size', 300))
+
+        try:
+            corner_radius = int(request.form.get('corner_radius', settings.DEFAULT_CORNER_RADIUS))
+        except ValueError:
+            corner_radius = settings.DEFAULT_CORNER_RADIUS
+        try:
+            qr_size = int(request.form.get('qr_size', settings.DEFAULT_QR_SIZE))
+        except ValueError:
+            qr_size = settings.DEFAULT_QR_SIZE
+
         color_mode = (request.form.get('color_mode') or 'color').strip().lower()
         colorful = not color_mode.startswith('mono')
 
-        if platform == 'facebook':
-            qr_image, shortlink, full_url = generate_facebook_qr(
-                profile_url=profile_url,
-                display_name=display_name,
-                use_shortlink=use_shortlink,
-                rounded_corners=rounded_corners,
-                corner_radius=corner_radius,
-                qr_size=qr_size,
-                colorful=colorful
-            )
-        elif platform == 'instagram':
-            qr_image, shortlink, full_url = generate_instagram_qr(
-                profile_url=profile_url,
-                display_name=display_name,
-                use_shortlink=use_shortlink,
-                rounded_corners=rounded_corners,
-                corner_radius=corner_radius,
-                qr_size=qr_size,
-                colorful=colorful
-            )
-        elif platform == 'linkedin':
-            qr_image, shortlink, full_url = generate_linkedin_qr(
-                profile_url=profile_url,
-                display_name=display_name,
-                use_shortlink=use_shortlink,
-                rounded_corners=rounded_corners,
-                corner_radius=corner_radius,
-                qr_size=qr_size,
-                colorful=colorful
-            )
-        else:
-            return "Invalid platform", 400
+        errors = qr_service.validate_social_input(platform, profile_url, display_name)
+        if errors:
+            return " | ".join(errors), 400
 
-        img_io = BytesIO()
-        qr_image.save(img_io, 'PNG', quality=95)
-        img_io.seek(0)
+        img, shortlink, full_url = qr_generator.generate_social_qr(
+            platform=platform,
+            profile_url=profile_url,
+            display_name=display_name,
+            use_shortlink=use_shortlink,
+            rounded_corners=rounded_corners,
+            corner_radius=corner_radius,
+            qr_size=qr_size,
+            colorful=colorful,
+        )
 
-        filename = f"qr_{platform}_{display_name.replace(' ', '_')}.png"
+        buf = BytesIO()
+        img.save(buf, 'PNG', quality=95)
+        buf.seek(0)
+        filename = qr_service.generate_filename(platform, display_name)
 
         return send_file(
-            img_io,
+            buf,
             mimetype='image/png',
             as_attachment=True,
             download_name=filename
         )
-
     except Exception as e:
         return f"Error: {str(e)}", 500
 
-
 @bp.route('/api/generate', methods=['POST'])
 def api_generate():
-    """API endpoint for QR generation"""
     try:
-        data = request.get_json()
-        platform = data.get('platform')
-        profile_url = data.get('profile_url')
-        display_name = data.get('display_name')
-        use_shortlink = data.get('use_shortlink', False)
-        rounded_corners = data.get('rounded_corners', False)
-        corner_radius = data.get('corner_radius', 40)
-        qr_size = data.get('qr_size', 300)
-        colorful = data.get('colorful', True)
+        data = request.get_json(force=True) or {}
+        platform = (data.get('platform') or '').strip().lower()
+        profile_url = (data.get('profile_url') or '').strip()
+        display_name = (data.get('display_name') or '').strip()
 
-        if platform == 'facebook':
-            qr_image, shortlink, full_url = generate_facebook_qr(
-                profile_url=profile_url,
-                display_name=display_name,
-                use_shortlink=use_shortlink,
-                rounded_corners=rounded_corners,
-                corner_radius=corner_radius,
-                qr_size=qr_size,
-                colorful=colorful
-            )
-        elif platform == 'instagram':
-            qr_image, shortlink, full_url = generate_instagram_qr(
-                profile_url=profile_url,
-                display_name=display_name,
-                use_shortlink=use_shortlink,
-                rounded_corners=rounded_corners,
-                corner_radius=corner_radius,
-                qr_size=qr_size,
-                colorful=colorful
-            )
-        elif platform == 'linkedin':
-            qr_image, shortlink, full_url = generate_linkedin_qr(
-                profile_url=profile_url,
-                display_name=display_name,
-                use_shortlink=use_shortlink,
-                rounded_corners=rounded_corners,
-                corner_radius=corner_radius,
-                qr_size=qr_size,
-                colorful=colorful
-            )
-        else:
+        if platform not in SUPPORTED:
             return jsonify({'error': 'Invalid platform'}), 400
 
-        # Convert to base64
-        img_io = BytesIO()
-        qr_image.save(img_io, 'PNG')
-        img_io.seek(0)
-        qr_base64 = base64.b64encode(img_io.getvalue()).decode()
+        use_shortlink = bool(data.get('use_shortlink', False))
+        rounded_corners = bool(data.get('rounded_corners', False))
+        corner_radius = int(data.get('corner_radius', settings.DEFAULT_CORNER_RADIUS))
+        qr_size = int(data.get('qr_size', settings.DEFAULT_QR_SIZE))
+        colorful = bool(data.get('colorful', True))
+
+        errors = qr_service.validate_social_input(platform, profile_url, display_name)
+        if errors:
+            return jsonify({'success': False, 'errors': errors}), 400
+
+        img, shortlink, full_url = qr_generator.generate_social_qr(
+            platform=platform,
+            profile_url=profile_url,
+            display_name=display_name,
+            use_shortlink=use_shortlink,
+            rounded_corners=rounded_corners,
+            corner_radius=corner_radius,
+            qr_size=qr_size,
+            colorful=colorful,
+        )
+
+        # to base64
+        buf = BytesIO()
+        img.save(buf, 'PNG')
+        buf.seek(0)
+        qr_b64 = base64.b64encode(buf.getvalue()).decode('ascii')
 
         return jsonify({
             'success': True,
-            'qr_image': f"data:image/png;base64,{qr_base64}",
+            'qr_image': f"data:image/png;base64,{qr_b64}",
             'shortlink': shortlink,
             'full_url': full_url
         })
-
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500

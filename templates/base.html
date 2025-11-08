@@ -15,17 +15,25 @@
                 <h1>🧵 QRWeaver</h1>
                 <p class="tagline">Weaving Your Digital Connections</p>
             </div>
+
             <nav class="nav">
-                <a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">
+                <a href="{{ url_for('main.index') }}"
+                   class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">
                     🏠 Начало
                 </a>
-                <a href="{{ url_for('main.facebook_qr') }}" class="nav-link {% if request.endpoint == 'main.facebook_qr' %}active{% endif %}">
+
+                <a href="{{ url_for('main.social_qr', platform='facebook') }}"
+                   class="nav-link {% if request.view_args and request.view_args.get('platform') == 'facebook' %}active{% endif %}">
                     📘 Facebook
                 </a>
-                <a href="{{ url_for('main.instagram_qr') }}" class="nav-link {% if request.endpoint == 'main.instagram_qr' %}active{% endif %}">
+
+                <a href="{{ url_for('main.social_qr', platform='instagram') }}"
+                   class="nav-link {% if request.view_args and request.view_args.get('platform') == 'instagram' %}active{% endif %}">
                     📷 Instagram
                 </a>
-                <a href="{{ url_for('main.linkedin_qr') }}" class="nav-link {% if request.endpoint == 'main.linkedin_qr' %}active{% endif %}">
+
+                <a href="{{ url_for('main.social_qr', platform='linkedin') }}"
+                   class="nav-link {% if request.view_args and request.view_args.get('platform') == 'linkedin' %}active{% endif %}">
                     💼 LinkedIn
                 </a>
             </nav>
@@ -51,7 +59,7 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>&copy; 2023 QRWeaver. Weaving digital connections with style.</p>
+            <p>&copy; {{ 2025 }} QRWeaver — Weaving digital connections with style.</p>
         </footer>
     </div>
 

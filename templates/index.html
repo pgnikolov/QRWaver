@@ -1,52 +1,54 @@
 {% extends "base.html" %}
 
+{% block title %}QRWeaver — Create Your Custom Social QR Codes{% endblock %}
+
 {% block content %}
 <div class="hero">
-    <h1>🧵 Create Your QR Code</h1>
-    <p>Transform any link into beautiful digital art</p>
+    <h1>🧵 Create Your Social QR Code</h1>
+    <p>Transform your social profiles into beautiful, scannable digital art.</p>
 </div>
 
 <div class="platforms-grid">
     <div class="platform-card">
         <div class="platform-icon">📘</div>
         <h3>Facebook QR</h3>
-        <p>Customized QR codes for your Facebook profile</p>
-        <a href="{{ url_for('main.facebook_qr') }}" class="btn btn-primary">Create Facebook QR</a>
+        <p>Generate branded QR codes for your Facebook profile or page.</p>
+        <a href="{{ url_for('main.social_qr', platform='facebook') }}" class="btn btn-primary">Create Facebook QR</a>
     </div>
 
     <div class="platform-card">
         <div class="platform-icon">📷</div>
         <h3>Instagram QR</h3>
-        <p>Colorful QR codes with Instagram gradients</p>
-        <a href="{{ url_for('main.instagram_qr') }}" class="btn btn-primary">Create Instagram QR</a>
+        <p>Create colorful QR codes with Instagram-inspired gradients.</p>
+        <a href="{{ url_for('main.social_qr', platform='instagram') }}" class="btn btn-primary">Create Instagram QR</a>
     </div>
 
     <div class="platform-card">
         <div class="platform-icon">💼</div>
         <h3>LinkedIn QR</h3>
-        <p>Professional QR codes for LinkedIn profile</p>
-        <a href="{{ url_for('main.linkedin_qr') }}" class="btn btn-primary">Create LinkedIn QR</a>
+        <p>Build professional QR codes for your LinkedIn profile or company page.</p>
+        <a href="{{ url_for('main.social_qr', platform='linkedin') }}" class="btn btn-primary">Create LinkedIn QR</a>
     </div>
 </div>
 
 <div class="features-section">
-    <h2>✨ All Features in One Place</h2>
+    <h2>✨ Why Choose QRWeaver?</h2>
     <div class="features-grid">
         <div class="feature">
             <h3>🎨 Rounded Corners</h3>
-            <p>Choose rounded corners for a more modern look</p>
+            <p>Add a modern touch to your QR codes with customizable corner radii.</p>
         </div>
         <div class="feature">
             <h3>🔗 Shortlinks</h3>
-            <p>Automatically generate short links</p>
+            <p>Automatically generate cleaner, shorter URLs inside the QR code.</p>
         </div>
         <div class="feature">
-            <h3>📱 Optimized</h3>
-            <p>Perfect for printing and sharing</p>
+            <h3>📱 Optimized for Sharing</h3>
+            <p>Perfect for social media, printing, and cross-platform compatibility.</p>
         </div>
         <div class="feature">
-            <h3>🎯 Branded</h3>
-            <p>Colors and logos for each platform</p>
+            <h3>🎯 Branded Look</h3>
+            <p>Each QR code matches the color style of its platform — no guesswork needed.</p>
         </div>
     </div>
 </div>
