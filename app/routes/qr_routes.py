@@ -1,14 +1,22 @@
 from flask import Blueprint, render_template, abort
 
-qr_bp = Blueprint("qr", __name__)
+qr_bp = Blueprint("qr", __name__, url_prefix="/qr")
+
+VALID_TYPES = {
+    "url", "text", "wifi", "email", "phone", "vcard",
+    "location", "youtube", "event", "crypto",
+    "appstore", "googleplay", "menu",
+    "facebook", "instagram", "linkedin",
+    "tiktok", "twitter"
+}
 
 @qr_bp.route("/<qr_type>")
 def qr_editor(qr_type):
-    """Temporary placeholder for all QR type editors."""
-    supported = [
-        "url", "vcard", "wifi", "text", "email", "phone",
-        "location", "event", "youtube", "appstore", "crypto", "menu", "social"
-    ]
-    if qr_type not in supported:
+
+    qr_type_lower = qr_type.lower().replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+
+    if qr_type_lower not in VALID_TYPES:
         abort(404)
-    return render_template("qr_editor_placeholder.html", qr_type=qr_type)
+
+    template_path = f"qr_editors/qr_{qr_type_lower}.html"
+    return render_template(template_path, qr_type=qr_type_lower)

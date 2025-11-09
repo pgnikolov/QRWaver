@@ -14,6 +14,7 @@ def index():
     """Homepage with QR type selection."""
     return render_template("index.html", title="QRWeaver – Create Beautiful QR Codes")
 
-@main_bp.route("/")
+@main_bp.route("/about")
 def about():
+    """About page"""
     return render_template("about.html", title="About QRWeaver")

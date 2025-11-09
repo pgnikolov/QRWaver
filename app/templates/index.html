@@ -1,37 +1,77 @@
 {% extends "base.html" %}
+{% block title %}QRWaver — Generate your QR codes{% endblock %}
+
 {% block content %}
-<div class="text-center mb-5">
-    <h1 class="fw-bold">🧵 Create Your QR Code</h1>
-    <p class="text-muted">Transform links, contacts, Wi-Fi, and more into stylish digital codes</p>
-</div>
-
-<div class="row g-4 justify-content-center">
-    {% set qr_types = [
-        {"name": "Website / URL", "icon": "🌐", "path": "url"},
-        {"name": "vCard", "icon": "👤", "path": "vcard"},
-        {"name": "Wi-Fi", "icon": "📶", "path": "wifi"},
-        {"name": "Text", "icon": "📝", "path": "text"},
-        {"name": "Email", "icon": "✉️", "path": "email"},
-        {"name": "Phone", "icon": "📞", "path": "phone"},
-        {"name": "Location", "icon": "📍", "path": "location"},
-        {"name": "Event", "icon": "📅", "path": "event"},
-        {"name": "YouTube", "icon": "▶️", "path": "youtube"},
-        {"name": "App Store", "icon": "📱", "path": "appstore"},
-        {"name": "Crypto", "icon": "₿", "path": "crypto"},
-        {"name": "Restaurant Menu", "icon": "🍽️", "path": "menu"},
-        {"name": "Social Links", "icon": "💬", "path": "social"}
-    ] %}
-
-    {% for q in qr_types %}
-    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-        <div class="card shadow-sm border-0 hover-zoom">
-            <div class="card-body text-center">
-                <div class="fs-1">{{ q.icon }}</div>
-                <h6 class="mt-2">{{ q.name }}</h6>
-                <a href="{{ url_for('qr.qr_editor', qr_type=q.path) }}" class="stretched-link"></a>
-            </div>
-        </div>
+<section class="hero container">
+  <div class="hero-text">
+    <h1>Create, Style & Download Your QR Codes</h1>
+    <p>Generate QR codes for links, Wi-Fi, contact cards, menus, and more — all styled your way.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="/qr/url">Start Now</a>
+      <a class="btn btn-ghost" href="#types">Browse Types</a>
     </div>
+  </div>
+  <div class="hero-preview">
+    <div class="mock-card glass">
+      <div class="mock-qr"></div>
+      <div class="mock-ui">
+        <div class="chip">Size: 512px</div>
+        <div class="chip">EC: H</div>
+        <div class="chip">Rounded</div>
+      </div>
+      <button class="btn btn-primary btn-block">Download PNG</button>
+    </div>
+  </div>
+</section>
+
+<section id="types" class="container block">
+  <h2>QR Code Types</h2>
+  <p class="muted">Choose the format you need to start generating.</p>
+
+  <div class="qr-grid">
+    {% set qr_types = [
+      ('URL', 'qr.svg'),
+      ('Text', 'text.svg'),
+      ('Wi-Fi', 'wifi.svg'),
+      ('Email', 'email.svg'),
+      ('Phone', 'phone.svg'),
+      ('vCard', 'vcard.svg'),
+      ('Location', 'location.svg'),
+      ('YouTube', 'youtube.svg'),
+      ('Event', 'event.svg'),
+      ('Crypto', 'crypto.svg'),
+      ('App Store', 'appstore.svg'),
+      ('Google Play', 'googleplay.svg'),
+      ('Menu', 'restaurant.svg')
+    ] %}
+    {% for name, icon in qr_types %}
+      <a href="/qr/{{ name|lower }}" class="qr-card">
+        <img src="{{ url_for('static', filename='images/icons/' + icon) }}" alt="{{ name }}">
+        <p>{{ name }}</p>
+      </a>
     {% endfor %}
-</div>
+  </div>
+</section>
+
+<section class="container block">
+  <h2>Social QR Codes</h2>
+  <p class="muted">Link your followers directly to your profiles.</p>
+
+  <div class="qr-grid">
+    {% set socials = [
+      ('Facebook', 'facebook.svg'),
+      ('Instagram', 'instagram.svg'),
+      ('LinkedIn', 'linkedin.svg'),
+      ('Twitter', 'twitter.svg'),
+      ('TikTok', 'tiktok.svg'),
+      ('YouTube', 'youtube.svg')
+    ] %}
+    {% for name, icon in socials %}
+      <a href="/qr/{{ name|lower }}" class="qr-card">
+        <img src="{{ url_for('static', filename='images/icons/' + icon) }}" alt="{{ name }}">
+        <p>{{ name }}</p>
+      </a>
+    {% endfor %}
+  </div>
+</section>
 {% endblock %}

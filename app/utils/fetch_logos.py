@@ -30,7 +30,7 @@ ICONS = {
     "linkedin.svg": "linkedin",
     "youtube.svg": "youtube",
     "tiktok.svg": "tiktok",
-    "x.svg": "x",
+    "twitter.svg": "x",
     "appstore.svg": "appstore",      # fixed
     "googleplay.svg": "googleplay",
     "bitcoin.svg": "bitcoin",
