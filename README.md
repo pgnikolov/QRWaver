@@ -163,7 +163,7 @@ Response:
 A full API test runner is included:
 
 ```bash
-python test_api.py
+python test_api_legacy.py
 ```
 
 It runs through all supported QR types and prints live API responses.
