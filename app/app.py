@@ -13,6 +13,6 @@ def create_app():
     # Регистрираме всички blueprints
     app.register_blueprint(main_bp)
     app.register_blueprint(qr_bp)
-    app.register_blueprint(api_bp)
+    app.register_blueprint(api_bp, url_prefix="/api")
 
     return app

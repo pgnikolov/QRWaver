@@ -4,9 +4,13 @@ from app.services.rate_limiter import SimpleRateLimiter
 import logging
 
 api_bp = Blueprint("api", __name__)
+
+# QR generator core
 _qr = QRService()
-#_limiter = SimpleRateLimiter(limit=3, window_seconds=300)  # 3 requests / 5 min per IP
-_limiter = SimpleRateLimiter(limit=9999, window_seconds=10) # for testing
+
+# Rate limiter
+_limiter = SimpleRateLimiter(limit=9999, window_seconds=10)  # TEMP for development
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,7 +20,6 @@ def generate_qr():
         # Rate limit check
         allowed, remaining = _limiter.allow(request)
         if not allowed:
-            logger.warning(f"Rate limit exceeded for {request.remote_addr}")
             return jsonify({
                 "success": False,
                 "error": "Rate limit exceeded. Please try again later.",
@@ -24,18 +27,26 @@ def generate_qr():
                 "remaining": 0
             }), 429
 
+        # Read JSON
         payload = request.get_json(silent=True, force=True) or {}
+        print("\n Incoming QR API payload:", payload, "\n")
 
+        # Extract QR type
         qr_type = (payload.get("type") or "url").strip().lower()
-        data = payload.get("data") or {}
+
+        # Extract data (string or dict)
+        data = payload.get("data")
+        if not isinstance(data, (dict, str)):
+            data = str(data or "")
+
+        # Extract settings (colors, size, frame_type, etc.)
         settings = payload.get("settings") or {}
 
-        logger.info(f"Generating QR ({qr_type}) for {request.remote_addr}")
-
+        # Generate the QR
         result = _qr.generate(qr_type, data, settings)
         result["rate_limit"] = {"limit": 3, "remaining": remaining}
-        status = 200 if result.get("success") else 400
 
+        status = 200 if result.get("success") else 400
         return jsonify(result), status
 
     except Exception as e:
@@ -45,7 +56,7 @@ def generate_qr():
 
 @api_bp.route("/ping")
 def ping():
-    return jsonify({"success": True, "status": "ok", "message": "QRWeaver API online"})
+    return jsonify({"success": True, "status": "ok"})
 
 
 @api_bp.route("/version")
@@ -53,5 +64,5 @@ def version():
     return jsonify({
         "success": True,
         "version": "1.0.0",
-        "build": "backend-stable"
+        "build": "backend-clean"
     })

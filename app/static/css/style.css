@@ -162,3 +162,169 @@ h2{margin:0 0 6px}
 .footer-links a:hover {
   color: #2563EB;
 }
+
+.botao {
+  position: relative;
+  width: 130px;
+  height: 46px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  color: #fff;
+  font-family: Inter, sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+  transition: all 0.35s ease;
+  overflow: hidden;
+  margin-right: 10px;
+}
+
+.botao .mysvg {
+  display: none;
+}
+
+.botao:hover {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  gap: 0;
+}
+
+.botao:hover .texto {
+  display: none;
+}
+
+.botao:hover .mysvg {
+  display: inline;
+}
+
+.botao:hover::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 3px solid transparent;
+  border-top: 3px solid #fff;
+  border-right: 3px solid #fff;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- QR editor layout --- */
+.qr-editor-grid{
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:30px;
+  align-items:start;
+}
+.qr-controls textarea{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #d1d5db;
+  margin:10px 0 20px;
+  font-size:1rem;
+  resize:vertical;
+}
+.qr-controls .row2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:16px;
+}
+.qr-controls .lbl{ font-weight:600; display:block; margin-bottom:6px; }
+.qr-controls input[type="color"],
+.qr-controls select,
+.qr-controls input[type="text"]{
+  width:100%;
+  height:45px;
+  border:1px solid #d1d5db;
+  border-radius:8px;
+  padding:0 10px;
+  font-size:1rem;
+  background:#fff;
+}
+
+/* Preview */
+.qr-preview-wrap{ text-align:center; }
+.qr-preview{
+  border:1px solid #e5e7eb; background:#fff; border-radius:12px;
+  padding:16px; box-shadow:0 4px 14px rgba(0,0,0,.06);
+  min-height:340px; display:flex; align-items:center; justify-content:center;
+}
+.qr-buttons{ margin-top:16px; display:flex; gap:12px; justify-content:center; }
+
+/* Thumbs */
+.frame-picker{ margin-top:12px; }
+.thumb-grid{
+  display:grid;
+  grid-template-columns:repeat(5, minmax(0,1fr));
+  gap:10px; margin-bottom:12px;
+}
+.thumb{
+  border:1px solid #e5e7eb; background:#fff; border-radius:10px;
+  padding:8px; cursor:pointer; transition:box-shadow .15s ease, transform .1s ease, border-color .15s;
+  display:flex; align-items:center; justify-content:center; min-height:76px;
+}
+.thumb img{ width:100%; height:60px; object-fit:contain; }
+.thumb .thumb-none{
+  width:100%; height:60px; display:flex; align-items:center; justify-content:center;
+  color:#6b7280; font-weight:700; line-height:1.1; text-align:center; font-size:.9rem;
+}
+.thumb:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.06); }
+.thumb.selected{ border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.15) inset; }
+
+.frame-styles{
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;
+}
+
+/* Fancy buttons you provided */
+.botao {
+  position: relative;
+  width: 125px;
+  height: 45px;
+  border-radius: 20px;
+  border: none;
+  box-shadow: 1px 1px rgba(107, 221, 215, 0.37);
+  padding: 5px 10px;
+  background: linear-gradient(160deg, rgba(47,93,197,1) 0%, rgba(46,86,194,1) 5%, rgba(47,93,197,1) 11%, rgba(59,190,230,1) 57%, rgba(0,212,255,1) 71%);
+  color: #fff;
+  font-family: Roboto, sans-serif;
+  font-weight: 505;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  filter: drop-shadow(0 0 10px rgba(59, 190, 230, 0.568));
+  transition: .5s linear;
+}
+.botao .mysvg { display: none; }
+.botao:hover { width: 50px; height: 50px; border-radius: 50%; transition: .5s linear; }
+.botao:hover .texto { display: none; }
+.botao:hover .mysvg { display: inline; }
+.botao:hover::before {
+  content: '';
+  position: absolute;
+  top: -3px; left: -3px;
+  width: 100%; height: 100%;
+  border: 3.5px solid transparent;
+  border-top: 3.5px solid #fff; border-right: 3.5px solid #fff;
+  border-radius: 50%;
+  animation: animateC 2s linear infinite;
+}
+@keyframes animateC { 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} }
+
+@media (max-width: 960px){
+  .qr-editor-grid{ grid-template-columns:1fr; }
+}
