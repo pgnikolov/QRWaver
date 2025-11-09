@@ -1,19 +1,23 @@
 from flask import Flask
-from .config import settings
+from flask_cors import CORS
+from app.config.settings import Config
+
+
 
 def create_app():
-    app = Flask(__name__, template_folder='../templates', static_folder='../static')
-    app.config['SECRET_KEY'] = settings.SECRET_KEY
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
+    """Initialize Flask app with all blueprints and extensions."""
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-    from app.routes import bp
-    app.register_blueprint(bp)
+    CORS(app)
 
-    @app.after_request
-    def security_headers(resp):
-        resp.headers["X-Content-Type-Options"] = "nosniff"
-        resp.headers["X-Frame-Options"] = "DENY"
-        resp.headers["Referrer-Policy"] = "no-referrer"
-        return resp
+    # --- Register blueprints ---
+    from app.routes.main_routes import main_bp
+    from app.routes.qr_routes import qr_bp
+    from app.routes.api_routes import api_bp
+
+    app.register_blueprint(main_bp)
+    app.register_blueprint(qr_bp, url_prefix="/qr")
+    app.register_blueprint(api_bp, url_prefix="/api")
 
     return app

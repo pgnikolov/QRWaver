@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="fw-bold">🧵 Create Your QR Code</h1>
+    <p class="text-muted">Transform links, contacts, Wi-Fi, and more into stylish digital codes</p>
+</div>
+
+<div class="row g-4 justify-content-center">
+    {% set qr_types = [
+        {"name": "Website / URL", "icon": "🌐", "path": "url"},
+        {"name": "vCard", "icon": "👤", "path": "vcard"},
+        {"name": "Wi-Fi", "icon": "📶", "path": "wifi"},
+        {"name": "Text", "icon": "📝", "path": "text"},
+        {"name": "Email", "icon": "✉️", "path": "email"},
+        {"name": "Phone", "icon": "📞", "path": "phone"},
+        {"name": "Location", "icon": "📍", "path": "location"},
+        {"name": "Event", "icon": "📅", "path": "event"},
+        {"name": "YouTube", "icon": "▶️", "path": "youtube"},
+        {"name": "App Store", "icon": "📱", "path": "appstore"},
+        {"name": "Crypto", "icon": "₿", "path": "crypto"},
+        {"name": "Restaurant Menu", "icon": "🍽️", "path": "menu"},
+        {"name": "Social Links", "icon": "💬", "path": "social"}
+    ] %}
+
+    {% for q in qr_types %}
+    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+        <div class="card shadow-sm border-0 hover-zoom">
+            <div class="card-body text-center">
+                <div class="fs-1">{{ q.icon }}</div>
+                <h6 class="mt-2">{{ q.name }}</h6>
+                <a href="{{ url_for('qr.qr_editor', qr_type=q.path) }}" class="stretched-link"></a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

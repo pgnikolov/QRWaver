@@ -1,169 +1,199 @@
-# QRWaver
+# QRWeaver (v2.0)
 
-Create beautiful, branded QR codes for your social media profiles (Facebook, Instagram, LinkedIn) via a simple web UI or a lightweight HTTP API.
+Modernized and modular QR code generator — now fully API-driven and ready for frontend integration.
 
-The UI text is currently in Bulgarian, but the app and API are easy to use regardless of language.
+---
 
+## ⚙️ Overview
 
-## Features
-- Branded QR codes per platform with appropriate colors and logo
-- Optional shortlinks (compact, human‑friendly profile links)
-- Rounded corners option with adjustable radius
-- Adjustable QR size
-- Download as PNG from the UI
-- Simple JSON API returning a base64 PNG data URL
+The QRWeaver project has undergone a **major refactor**.  
+The backend was rewritten into a **modular Flask architecture** with clear separation of concerns.
 
+This version introduces:
+- Unified API endpoint (`/api/generate`)
+- Dedicated service layer for QR logic
+- Extensible QR type system (`app/services/qr_types/`)
+- Clean file structure with templates, static assets, and utilities
+- Built-in rate limiting and payload validation
+- Automatic `filename` and base64 image generation
 
-## Demo routes (local)
-After starting the server, open:
-- Home: http://127.0.0.1:5000/
-- Facebook QR page: http://127.0.0.1:5000/social/facebook
-- Instagram QR page: http://127.0.0.1:5000/social/instagram
-- LinkedIn QR page: http://127.0.0.1:5000/social/linkedin
+---
 
+## 🧩 New Project Structure
 
-## Project structure
-```
-C:/Users/pgnik/PycharmProjects/QRWaver
-├─ app.py                       # Entry point for local run
-├─ requirements.txt
-├─ app/
-│  ├─ __init__.py               # Flask app factory and blueprint registration
-│  ├─ routes.py                 # Web routes + API endpoint
-│  ├─ services/
-│  │  └─ qr_service.py          # (service layer, if used)
-│  └─ utils/
-│     ├─ qr_generator.py        # (placeholder)
-│     ├─ social_qr.py           # Main QR generation logic per platform
-│     ├─ style_utils.py         # Styling helpers
-│     └─ url_shortener.py       # Shortlink builder utilities
-├─ templates/
-│  ├─ base.html
-│  ├─ index.html
-│  └─ social/
-│     ├─ facebook.html
-│     ├─ instagram.html
-│     └─ linkedin.html
-├─ static/
-│  ├─ css/style.css
-│  ├─ js/script.js
-│  └─ images/logos/
-│     ├─ facebook_logo.png
-│     ├─ instagram_logo.png
-│     └─ linkedin-logo.png
 ```
 
+QRWaver/
+├── app/
+│   ├── **init**.py
+│   ├── config/
+│   │   ├── **init**.py
+│   │   └── settings.py
+│   │
+│   ├── routes/
+│   │   ├── **init**.py
+│   │   ├── main_routes.py         ← home, about, contact
+│   │   ├── qr_routes.py           ← all QR type forms + preview
+│   │   └── api_routes.py          ← REST API v1
+│   │
+│   ├── services/
+│   │   ├── **init**.py
+│   │   ├── qr_service.py          ← handles validation, image gen
+│   │   ├── rate_limiter.py        ← per-IP limiter for API/UI
+│   │   └── qr_types/              ← individual QR type modules
+│   │       ├── **init**.py
+│   │       ├── url_qr.py
+│   │       ├── vcard_qr.py
+│   │       ├── wifi_qr.py
+│   │       ├── email_qr.py
+│   │       ├── phone_qr.py
+│   │       ├── text_qr.py
+│   │       ├── social_qr.py
+│   │       ├── location_qr.py
+│   │       ├── youtube_qr.py
+│   │       ├── event_qr.py
+│   │       ├── crypto_qr.py
+│   │       ├── appstore_qr.py
+│   │       └── menu_qr.py
+│   │
+│   ├── utils/
+│   │   ├── **init**.py
+│   │   ├── style_utils.py         ← QR rounding, gradients, etc.
+│   │   └── url_shortener.py
+│   │
+│   ├── templates/
+│   │   ├── base.html
+│   │   ├── index.html             ← QR type selector (grid)
+│   │   ├── qr_editor.html         ← Main builder page (customization)
+│   │   ├── result.html            ← After generation (preview + download)
+│   │   └── includes/
+│   │       └── modals.html, navbar.html, footer.html
+│   │
+│   ├── static/
+│   │   ├── css/
+│   │   │   └── style.css
+│   │   ├── js/
+│   │   │   └── main.js
+│   │   ├── images/
+│   │   │   ├── logos/
+│   │   │   │   ├── facebook.svg
+│   │   │   │   ├── instagram.svg
+│   │   │   │   ├── linkedin.svg
+│   │   │   │   ├── youtube.svg
+│   │   │   │   ├── tiktok.svg
+│   │   │   │   ├── twitter.svg
+│   │   │   │   ├── appstore.svg
+│   │   │   │   ├── googleplay.svg
+│   │   │   │   ├── crypto.svg
+│   │   │   │   └── restaurant.svg
+│   │   │   ├── icons/
+│   │   │   │   ├── qr.svg
+│   │   │   │   ├── wifi.svg
+│   │   │   │   ├── event.svg
+│   │   │   │   ├── vcard.svg
+│   │   │   │   └── location.svg
+│   │   │   └── av/
+│   │   │       ├── logo_light.svg
+│   │   │       └── logo_dark.svg
+│   │
+│   └── app.py  ← entry point for Flask (create_app)
+│
+├── requirements.txt
+├── run.py       ← flask run entry
+├── README.md
+└── .env
 
-## Requirements
-- Python 3.10+ (recommended)
-- pip
+````
 
-Python dependencies (installed via `requirements.txt`):
-- Flask~=3.1.2
-- qrcode
+---
 
+## 🧠 Architecture Overview
 
-## Setup & run (local)
-1) Clone or download this repository.
+| Layer | Description |
+|-------|--------------|
+| **routes/** | Handles all web and API routes |
+| **services/** | Core business logic (QR generation, validation, limits) |
+| **qr_types/** | One module per QR type (e.g., `wifi_qr.py`) |
+| **utils/** | Visual helpers (rounded corners, gradients, etc.) |
+| **templates/** | HTML templates (Jinja2) for UI |
+| **static/** | JS, CSS, and assets for the web interface |
 
-2) Create and activate a virtual environment (Windows PowerShell):
-```
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
+---
 
-3) Install dependencies:
-```
-pip install -r requirements.txt
-```
+## 🌐 API Endpoint
 
-4) (Optional) Configure environment variables:
-- `SECRET_KEY` — overrides the default development key.
+**`POST /api/generate`**
 
-You can set it in PowerShell for the current session:
-```
-$env:SECRET_KEY = "your-strong-secret"
-```
+Request example:
+```json
+{
+  "type": "wifi",
+  "data": {
+    "ssid": "MyNetwork",
+    "password": "supersecret",
+    "encryption": "WPA2"
+  },
+  "settings": {
+    "size": 400,
+    "color": "#000000",
+    "rounded_corners": true
+  }
+}
+````
 
-5) Start the app:
-```
-python app.py
-```
+Response:
 
-6) Open the app in your browser:
-- http://127.0.0.1:5000/
-
-
-## Using the Web UI
-Each social page contains a form with:
-- Profile URL
-- Display name
-- Options:
-  - Use shortlink (on/off)
-  - Rounded corners (on/off)
-  - Corner radius (default 40)
-  - QR size (default 300)
-
-Submit to preview the QR and use the Download button to save a PNG.
-
-
-## HTTP API
-Endpoint: `POST /api/generate`
-
-Content-Type: `application/json`
-
-Request body fields:
-- `platform` — one of `facebook`, `instagram`, `linkedin` (required)
-- `profile_url` — full profile URL or handle (required)
-- `display_name` — text to render under the QR (required)
-- `use_shortlink` — boolean (default: true)
-- `rounded_corners` — boolean (default: false)
-- `corner_radius` — integer, pixels (default: 40)
-- `qr_size` — integer, pixels (default: 300)
-
-Example cURL:
-```
-curl -X POST http://127.0.0.1:5000/api/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "platform": "instagram",
-    "profile_url": "https://instagram.com/myhandle",
-    "display_name": "My Brand",
-    "use_shortlink": true,
-    "rounded_corners": true,
-    "corner_radius": 40,
-    "qr_size": 300
-  }'
-```
-
-Successful response (truncated example):
-```
+```json
 {
   "success": true,
-  "qr_image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
-  "shortlink": "instagram.com/myhandle",
-  "full_url": "https://instagram.com/myhandle"
+  "image": "data:image/png;base64,...",
+  "payload": "WIFI:T:WPA2;S:MyNetwork;P:supersecret;H:false;;",
+  "mime": "image/png",
+  "width": 400,
+  "height": 400,
+  "filename": "qrweaver_wifi_2025-11-09T02-00-00.png",
+  "rate_limit": {"limit": 3, "remaining": 2}
 }
 ```
 
-Errors:
-- 400 with `{ "error": "Invalid platform" }` for unsupported `platform`.
-- 500 with `{ "error": "<message>" }` on unexpected errors.
+---
 
+## 🧪 Local Testing
 
-## Download endpoint (from UI)
-The UI uses `POST /download/<platform>` to download the generated QR as a PNG. It accepts the same form fields as the social pages.
+A full API test runner is included:
 
+```bash
+python test_api.py
+```
 
-## Implementation notes
-- QR generation and styling are handled in `app/utils/social_qr.py` via the `SocialQRGenerator` class.
-- Shortlinks are formatted by `app/utils/url_shortener.py` and converted to full URLs when needed.
-- Flask app factory is defined in `app/__init__.py`; routes are registered via a blueprint in `app/routes.py`.
+It runs through all supported QR types and prints live API responses.
 
+---
 
-## Localization
-- UI strings are currently in Bulgarian (e.g., form labels, messages). The backend/route names and API remain language-agnostic.
+## 🪄 Next Step: Frontend Integration
 
+The backend is **100% ready**.
+Next up — frontend integration using HTML/JS or a React/Vite setup.
 
-## License
-Specify your preferred license (e.g., MIT) here.
+Planned:
+
+* QR builder UI (form per type)
+* Live preview (base64 image)
+* “Download” button using `filename` from API response
+* Option to add overlay logo and rounded corners
+
+---
+
+## 🧰 Tech Stack
+
+* Python 3.10+
+* Flask 3.x
+* Pillow + qrcode
+* Flask-CORS
+* Dataclasses + PEP8-compliant structure
+
+---
+
+## 🧾 License
+
+MIT © 2025 — QRWeaver Project
