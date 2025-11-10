@@ -328,3 +328,13 @@ h2{margin:0 0 6px}
 @media (max-width: 960px){
   .qr-editor-grid{ grid-template-columns:1fr; }
 }
+
+/* ✅ Bigger preview output */
+.qr-preview img,
+.qr-preview svg,
+.qr-big {
+  max-width: 90%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}

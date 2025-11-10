@@ -28,48 +28,39 @@
         </div>
       </div>
 
-      <!-- Frame picker (thumbnails) -->
+      <!-- Frame picker -->
       <div class="frame-picker">
         <div class="lbl" style="margin-bottom:8px;">Frame</div>
         <div class="thumb-grid" id="frame-thumbs" data-selected="none">
+
+          <!-- No frame -->
           <button class="thumb selected" data-frame="none" aria-label="No frame">
             <div class="thumb-none">No<br>frame</div>
           </button>
 
+          <!-- Frames -->
           <button class="thumb" data-frame="frame_2parts">
-            <img src="{{ url_for('static', filename='images/frames/frame_2parts.svg') }}" alt="Two Parts"/>
+            <img src="{{ url_for('static', filename='images/frames_thumbs/two_parts_96.png') }}" alt="Two Parts"/>
           </button>
 
           <button class="thumb" data-frame="frame_whole">
-            <img src="{{ url_for('static', filename='images/frames/frame_whole.svg') }}" alt="Rounded"/>
+            <img src="{{ url_for('static', filename='images/frames_thumbs/rounded_96.png') }}" alt="Rounded"/>
           </button>
 
           <button class="thumb" data-frame="frame_bag">
-            <img src="{{ url_for('static', filename='images/frames/frame_bag.svg') }}" alt="Bag"/>
+            <img src="{{ url_for('static', filename='images/frames_thumbs/bag_96.png') }}" alt="Bag"/>
           </button>
 
           <button class="thumb" data-frame="frame_phone">
-            <img src="{{ url_for('static', filename='images/frames/frame_phone.svg') }}" alt="Phone"/>
+            <img src="{{ url_for('static', filename='images/frames_thumbs/phone_96.png') }}" alt="Phone"/>
           </button>
         </div>
 
-        <!-- Frame text + styling -->
+        <!-- Only frame COLOR -->
         <div class="frame-styles">
           <div>
-            <label for="frame-text" class="lbl">Frame text</label>
-            <input type="text" id="frame-text" value="SCAN ME" placeholder="SCAN ME"/>
-          </div>
-          <div>
-            <label for="frame-color" class="lbl">Frame text color</label>
-            <input type="color" id="frame-color" value="#FFFFFF"/>
-          </div>
-          <div>
-            <label for="frame-font" class="lbl">Font</label>
-            <select id="frame-font">
-              <option value="Arial, sans-serif" selected>Sans (Arial)</option>
-              <option value="Georgia, serif">Serif (Georgia)</option>
-              <option value="Courier New, monospace">Mono (Courier)</option>
-            </select>
+            <label for="frame-color" class="lbl">Frame color</label>
+            <input type="color" id="frame-color" value="#000000"/>
           </div>
         </div>
       </div>
