@@ -2,102 +2,105 @@
 {% block title %}Text QR — QRWaver{% endblock %}
 {% block content %}
 
-<section class="container block">
-  <h1 style="font-size:1.8rem; margin-bottom:10px;">Text QR Generator</h1>
-  <p class="muted" style="margin-bottom:30px;">Type your text — preview updates instantly. Pick a frame if you want.</p>
+    <section class="container block">
+        <h1 style="font-size:1.8rem; margin-bottom:10px;">Text QR Generator</h1>
+        <p class="muted" style="margin-bottom:30px;">Type your text — preview updates instantly. Pick a frame if you
+            want.</p>
 
-  <div class="qr-editor-grid">
-    <!-- Left: Controls -->
-    <div class="qr-controls">
-      <label for="qr-text" class="lbl">Your text</label>
-      <textarea id="qr-text" rows="5" placeholder="Type your message..."></textarea>
+        <div class="qr-editor-grid">
+            <!-- Left: Controls -->
+            <div class="qr-controls">
+                <label for="qr-text" class="lbl">Your text</label>
+                <textarea id="qr-text" rows="5" placeholder="Type your message..."></textarea>
 
-      <div class="row2">
-        <div>
-          <label for="qr-color" class="lbl">QR color</label>
-          <input type="color" id="qr-color" value="#2563EB"/>
+                <div class="row2">
+                    <div>
+                        <label for="qr-color" class="lbl">QR color</label>
+                        <input type="color" id="qr-color" value="#2563EB"/>
+                    </div>
+                    <div>
+                        <label class="lbl" for="qr-format">Download format</label>
+                        <select id="qr-format">
+                            <option value="png">PNG (High-Res)</option>
+                            <option value="jpeg">JPEG (High-Res)</option>
+                            <option value="svg">SVG (Vector)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Frame picker -->
+                <div class="frame-picker">
+                    <div class="lbl" style="margin-bottom:8px;">Frame</div>
+                    <div class="thumb-grid" id="frame-thumbs" data-selected="none">
+
+                        <!-- No frame -->
+                        <button class="thumb selected" data-frame="none" aria-label="No frame">
+                            <div class="thumb-none">No<br>frame</div>
+                        </button>
+
+                        <!-- Frames -->
+                        <button class="thumb" data-frame="frame_2parts">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/two_parts_96.png') }}"
+                                 alt="Two Parts"/>
+                        </button>
+
+                        <button class="thumb" data-frame="frame_whole">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/rounded_96.png') }}"
+                                 alt="Rounded"/>
+                        </button>
+
+                        <button class="thumb" data-frame="frame_bag">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/bag_96.png') }}" alt="Bag"/>
+                        </button>
+
+                        <button class="thumb" data-frame="frame_phone">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/phone_96.png') }}"
+                                 alt="Phone"/>
+                        </button>
+                    </div>
+
+                    <!-- Only frame COLOR -->
+                    <div class="frame-styles">
+                        <div>
+                            <label for="frame-color" class="lbl">Frame color</label>
+                            <input type="color" id="frame-color" value="#000000"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Preview + Actions -->
+            <div class="qr-preview-wrap">
+                <div id="qr-preview" class="qr-preview">
+                    <p class="muted">Your QR will appear here</p>
+                </div>
+
+                <div class="qr-buttons">
+                    <button id="downloadBtn" class="botao" disabled>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                             xmlns="http://www.w3.org/2000/svg" class="mysvg">
+                            <path d="M6 21H18M12 3V17M12 17L17 12M12 17L7 12"
+                                  stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="texto">Download</span>
+                    </button>
+
+                    <button id="shareBtn" class="botao purple" disabled>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                             xmlns="http://www.w3.org/2000/svg" class="mysvg">
+                            <path d="M4 12V19C4 19.5523 4.44772 20 5 20H19C19.5523 20 20 19.5523 20 19V12M16 8L12 4M12 4L8 8M12 4V16"
+                                  stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="texto">Share</span>
+                    </button>
+                </div>
+            </div>
         </div>
-        <div>
-          <label for="qr-size" class="lbl">Size</label>
-          <select id="qr-size">
-            <option value="300">300 px</option>
-            <option value="420">420 px</option>
-            <option value="512" selected>512 px</option>
-            <option value="640">640 px</option>
-          </select>
-        </div>
-      </div>
+    </section>
 
-      <!-- Frame picker -->
-      <div class="frame-picker">
-        <div class="lbl" style="margin-bottom:8px;">Frame</div>
-        <div class="thumb-grid" id="frame-thumbs" data-selected="none">
-
-          <!-- No frame -->
-          <button class="thumb selected" data-frame="none" aria-label="No frame">
-            <div class="thumb-none">No<br>frame</div>
-          </button>
-
-          <!-- Frames -->
-          <button class="thumb" data-frame="frame_2parts">
-            <img src="{{ url_for('static', filename='images/frames_thumbs/two_parts_96.png') }}" alt="Two Parts"/>
-          </button>
-
-          <button class="thumb" data-frame="frame_whole">
-            <img src="{{ url_for('static', filename='images/frames_thumbs/rounded_96.png') }}" alt="Rounded"/>
-          </button>
-
-          <button class="thumb" data-frame="frame_bag">
-            <img src="{{ url_for('static', filename='images/frames_thumbs/bag_96.png') }}" alt="Bag"/>
-          </button>
-
-          <button class="thumb" data-frame="frame_phone">
-            <img src="{{ url_for('static', filename='images/frames_thumbs/phone_96.png') }}" alt="Phone"/>
-          </button>
-        </div>
-
-        <!-- Only frame COLOR -->
-        <div class="frame-styles">
-          <div>
-            <label for="frame-color" class="lbl">Frame color</label>
-            <input type="color" id="frame-color" value="#000000"/>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right: Preview + Actions -->
-    <div class="qr-preview-wrap">
-      <div id="qr-preview" class="qr-preview">
-        <p class="muted">Your QR will appear here</p>
-      </div>
-
-      <div class="qr-buttons">
-        <button id="downloadBtn" class="botao" disabled>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-               xmlns="http://www.w3.org/2000/svg" class="mysvg">
-            <path d="M6 21H18M12 3V17M12 17L17 12M12 17L7 12"
-              stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          <span class="texto">Download</span>
-        </button>
-
-        <button id="shareBtn" class="botao purple" disabled>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-               xmlns="http://www.w3.org/2000/svg" class="mysvg">
-            <path d="M4 12V19C4 19.5523 4.44772 20 5 20H19C19.5523 20 20 19.5523 20 19V12M16 8L12 4M12 4L8 8M12 4V16"
-              stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          <span class="texto">Share</span>
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
-<script>
-  initQRGenerator("text");
-</script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        initQRGenerator("text");
+    </script>
 
 {% endblock %}
