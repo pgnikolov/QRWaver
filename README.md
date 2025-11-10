@@ -25,83 +25,127 @@ This version introduces:
 
 QRWaver/
 ├── app/
-│   ├── **init**.py
 │   ├── config/
-│   │   ├── **init**.py
+│   │   ├── __init__.py
 │   │   └── settings.py
-│   │
 │   ├── routes/
-│   │   ├── **init**.py
-│   │   ├── main_routes.py         ← home, about, contact
-│   │   ├── qr_routes.py           ← all QR type forms + preview
-│   │   └── api_routes.py          ← REST API v1
-│   │
+│   │   ├── __init__.py
+│   │   ├── api_routes.py
+│   │   ├── main_routes.py
+│   │   └── qr_routes.py
 │   ├── services/
-│   │   ├── **init**.py
-│   │   ├── qr_service.py          ← handles validation, image gen
-│   │   ├── rate_limiter.py        ← per-IP limiter for API/UI
-│   │   └── qr_types/              ← individual QR type modules
-│   │       ├── **init**.py
-│   │       ├── url_qr.py
-│   │       ├── vcard_qr.py
-│   │       ├── wifi_qr.py
-│   │       ├── email_qr.py
-│   │       ├── phone_qr.py
-│   │       ├── text_qr.py
-│   │       ├── social_qr.py
-│   │       ├── location_qr.py
-│   │       ├── youtube_qr.py
-│   │       ├── event_qr.py
-│   │       ├── crypto_qr.py
-│   │       ├── appstore_qr.py
-│   │       └── menu_qr.py
-│   │
-│   ├── utils/
-│   │   ├── **init**.py
-│   │   ├── style_utils.py         ← QR rounding, gradients, etc.
-│   │   └── url_shortener.py
-│   │
-│   ├── templates/
-│   │   ├── base.html
-│   │   ├── index.html             ← QR type selector (grid)
-│   │   ├── qr_editor.html         ← Main builder page (customization)
-│   │   ├── result.html            ← After generation (preview + download)
-│   │   └── includes/
-│   │       └── modals.html, navbar.html, footer.html
-│   │
+│   │   ├── qr_types/
+│   │   │   ├── __init__.py
+│   │   │   ├── appstore_qr.py
+│   │   │   ├── crypto_qr.py
+│   │   │   ├── email_qr.py
+│   │   │   ├── event_qr.py
+│   │   │   ├── location_qr.py
+│   │   │   ├── menu_qr.py
+│   │   │   ├── phone_qr.py
+│   │   │   ├── social_qr.py
+│   │   │   ├── text_qr.py
+│   │   │   ├── url_qr.py
+│   │   │   ├── vcard_qr.py
+│   │   │   ├── wifi_qr.py
+│   │   │   └── youtube_qr.py
+│   │   ├── __init__.py
+│   │   ├── qr_service.py
+│   │   └── rate_limiter.py
 │   ├── static/
 │   │   ├── css/
 │   │   │   └── style.css
-│   │   ├── js/
-│   │   │   └── main.js
 │   │   ├── images/
-│   │   │   ├── logos/
+│   │   │   ├── branding/
+│   │   │   │   └── logo_wordmark.png
+│   │   │   ├── frames/
+│   │   │   │   ├── frame_2parts.svg
+│   │   │   │   ├── frame_bag.svg
+│   │   │   │   ├── frame_phone.svg
+│   │   │   │   └── frame_whole.svg
+│   │   │   ├── frames_thumbs/
+│   │   │   │   ├── bag_96.png
+│   │   │   │   ├── phone_96.png
+│   │   │   │   ├── rounded_96.png
+│   │   │   │   └── two_parts_96.png
+│   │   │   ├── icons/
+│   │   │   │   ├── appstore.svg
+│   │   │   │   ├── bitcoin.svg
+│   │   │   │   ├── crypto.svg
+│   │   │   │   ├── email.svg
+│   │   │   │   ├── event.svg
 │   │   │   │   ├── facebook.svg
+│   │   │   │   ├── googleplay.svg
 │   │   │   │   ├── instagram.svg
 │   │   │   │   ├── linkedin.svg
-│   │   │   │   ├── youtube.svg
+│   │   │   │   ├── location.svg
+│   │   │   │   ├── phone.svg
+│   │   │   │   ├── qr.svg
+│   │   │   │   ├── restaurant.svg
+│   │   │   │   ├── text.svg
 │   │   │   │   ├── tiktok.svg
 │   │   │   │   ├── twitter.svg
-│   │   │   │   ├── appstore.svg
-│   │   │   │   ├── googleplay.svg
-│   │   │   │   ├── crypto.svg
-│   │   │   │   └── restaurant.svg
-│   │   │   ├── icons/
-│   │   │   │   ├── qr.svg
-│   │   │   │   ├── wifi.svg
-│   │   │   │   ├── event.svg
 │   │   │   │   ├── vcard.svg
-│   │   │   │   └── location.svg
-│   │   │   └── av/
-│   │   │       ├── logo_light.svg
-│   │   │       └── logo_dark.svg
-│   │
-│   └── app.py  ← entry point for Flask (create_app)
-│
-├── requirements.txt
-├── run.py       ← flask run entry
+│   │   │   │   ├── wifi.svg
+│   │   │   │   └── youtube.svg
+│   │   │   ├── logos/
+│   │   │       ├── appstore.svg
+│   │   │       ├── bitcoin.svg
+│   │   │       ├── crypto.svg
+│   │   │       ├── facebook.svg
+│   │   │       ├── googleplay.svg
+│   │   │       ├── instagram.svg
+│   │   │       ├── linkedin.svg
+│   │   │       ├── restaurant.svg
+│   │   │       ├── tiktok.svg
+│   │   │       ├── x.svg
+│   │   │       └── youtube.svg
+│   │   ├── js/
+│   │       └── script.js
+│   ├── templates/
+│   │   ├── includes/
+│   │   │   ├── footer.html
+│   │   │   ├── modals.html
+│   │   │   └── navbar.html
+│   │   ├── qr_editors/
+│   │   │   ├── qr_appstore.html
+│   │   │   ├── qr_crypto.html
+│   │   │   ├── qr_email.html
+│   │   │   ├── qr_event.html
+│   │   │   ├── qr_facebook.html
+│   │   │   ├── qr_googleplay.html
+│   │   │   ├── qr_instagram.html
+│   │   │   ├── qr_linkedin.html
+│   │   │   ├── qr_location.html
+│   │   │   ├── qr_menu.html
+│   │   │   ├── qr_phone.html
+│   │   │   ├── qr_text.html
+│   │   │   ├── qr_tiktok.html
+│   │   │   ├── qr_twitter.html
+│   │   │   ├── qr_url.html
+│   │   │   ├── qr_vcard.html
+│   │   │   ├── qr_wifi.html
+│   │   │   └── qr_youtube.html
+│   │   ├── about.html
+│   │   ├── base.html
+│   │   ├── index.html
+│   │   ├── qr_editor_placeholder.html
+│   │   └── result.html
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── fetch_logos.py
+│   │   ├── style_utils.py
+│   │   └── url_shortener.py
+│   ├── __init__.py
+│   └── app.py
+├── logs/
+├── tests/
+│   └── test_api_v1.py
+├── LICENSE
 ├── README.md
-└── .env
+├── requirements.txt
+└── run.py
+
 
 ````
 
