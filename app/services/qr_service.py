@@ -31,7 +31,16 @@ RGB = Tuple[int, int, int]
 
 
 def _parse_hex_color(s: str, default: RGB) -> RGB:
-    """'#RRGGBB' -> (R,G,B)."""
+    """
+    Parses a string representing a hexadecimal color and converts it into an RGB tuple. If the input string is invalid or
+    cannot be parsed, a default RGB value is returned.
+
+    :param s: A string representing a hexadecimal color code. It may include the leading '#'
+        character and can use a shorthand format (e.g., "#abc" equivalent to "#aabbcc").
+    :param default: A default RGB tuple to return if the input string is invalid or cannot be parsed.
+    :return: A tuple of three integers representing the RGB color, where each integer ranges
+        from 0 to 255.
+    """
     if not s:
         return default
     s = s.strip().lstrip("#")
@@ -50,6 +59,35 @@ def _parse_hex_color(s: str, default: RGB) -> RGB:
 
 @dataclass
 class QRRenderSettings:
+    """
+    Represents the settings for rendering a QR code.
+
+    This class is used to define and customize various parameters for QR code
+    generation, such as dimensions, colors, error correction level, and more. It
+    can also include additional optional elements like a logo overlay or a frame.
+    The settings provided by this class can be used to generate a styled and
+    functional QR code suitable for different purposes.
+
+    :ivar size: The size of the QR code in pixels.
+    :type size: int
+    :ivar color: The color of the QR code in hexadecimal format.
+    :type color: str
+    :ivar background: The background color of the QR code in hexadecimal format.
+    :type background: str
+    :ivar error_correction: The error correction level of the QR code. Possible
+        values are "L", "M", "Q", or "H".
+    :type error_correction: str
+    :ivar border: The size of the border around the QR code (measured in modules).
+    :type border: int
+    :ivar overlay_logo_path: The file path for an optional overlay logo to be
+        placed in the center of the QR code.
+    :type overlay_logo_path: Optional[str]
+    :ivar format: The file format for the rendered QR code (e.g., "png").
+    :type format: str
+    :ivar frame: A dictionary representing an optional SVG frame for the QR code,
+        which is typically handled by the frontend.
+    :type frame: Optional[Dict[str, Any]]
+    """
     size: int = 512
     color: str = "#000000"
     background: str = "#FFFFFF"
@@ -61,7 +99,17 @@ class QRRenderSettings:
 
 
 class QRService:
+    """
+    QRService handles the creation, validation, and rendering of various types of QR codes.
 
+    This class provides methods to validate input data, construct payloads based on the
+    specified QR code type, render QR codes with customizable styling, and generate encoded
+    images in a consumable format.
+
+    :ivar PAYLOAD_BUILDERS: Mapping of QR code types to their respective payload builders.
+    :ivar _EC_MAP: Internal mapping of error correction levels to QRCode constants in the
+                   qrcode library.
+    """
     _EC_MAP = {
         "L": qrcode.constants.ERROR_CORRECT_L,
         "M": qrcode.constants.ERROR_CORRECT_M,

@@ -6,6 +6,16 @@ from app.config.settings import Config
 
 
 def create_app():
+    """
+    Creates and configures the Flask application instance.
+
+    This function initializes the Flask application with its configuration
+    and registers all required blueprints to provide modular organization
+    and routing for the application.
+
+    :returns: A Flask application instance configured and ready for use.
+    :rtype: Flask
+    """
     app = Flask(__name__)
 
     app.config.from_object(Config)

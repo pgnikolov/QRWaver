@@ -6,7 +6,16 @@ import os
 
 
 def create_app():
-    """Initialize Flask app with all blueprints and extensions."""
+    """
+    Creates and configures the Flask application instance.
+
+    This function sets up the application with necessary configurations, logging,
+    blueprints, and error handlers. Additionally, it defines routes for health
+    and version checks.
+
+    :returns: Configured Flask application instance.
+    :rtype: Flask
+    """
     app = Flask(__name__)
     app.config.from_object(Config)
 

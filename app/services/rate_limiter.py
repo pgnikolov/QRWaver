@@ -5,8 +5,18 @@ from flask import Request
 
 class SimpleRateLimiter:
     """
-    In-memory sliding window limiter.
-    NOT for multi-process production; replace with Redis later.
+    A simple rate limiter class used to limit the number of requests from a specific source within
+    a given time window. Designed for scenarios where controlling request rates is necessary to
+    prevent abuse or overload on a system.
+
+    This rate limiter supports custom configuration for the maximum limit of requests and the time
+    window in seconds over which the limit applies. It identifies request sources based on their IP
+    address, either provided directly or through the "X-Forwarded-For" header when behind a proxy.
+
+    :ivar limit: The maximum number of requests allowed within the time window.
+    :type limit: int
+    :ivar window: The duration of the time window in seconds during which the request count is measured.
+    :type window: int
     """
 
     def __init__(self, limit: int = 3, window_seconds: int = 300):

@@ -7,14 +7,44 @@ main_bp = Blueprint("main", __name__)
 
 @main_bp.app_context_processor
 def inject_now():
+    """
+    Provides a context processor to inject the current year into templates.
+
+    This function is registered to the Flask application and executes within
+    the application context. It retrieves the current year in UTC time and
+    makes it available in templates under the key ``current_year``.
+
+    :return: A dictionary with the current year as an integer under the key
+        ``current_year``.
+    :rtype: dict
+    """
     return {'current_year': datetime.now(timezone.utc).year}
 
 @main_bp.route("/")
 def index():
-    """Homepage with QR type selection."""
+    """
+    Handles the root route of the application, rendering the homepage.
+
+    The function serves the main entry point for the frontend user interface,
+    by rendering the HTML template for the index page. It uses the Flask
+    `render_template` function to dynamically generate the content of the
+    homepage.
+
+    :return: A rendered HTML template of the application's homepage, with the
+        title 'QRWeaver – Create Beautiful QR Codes'.
+    :rtype: Response
+    """
     return render_template("index.html", title="QRWeaver – Create Beautiful QR Codes")
 
 @main_bp.route("/about")
 def about():
-    """About page"""
+    """
+    Handles the rendering of the 'About' page for the QRWeaver application.
+
+    This function is mapped to the `/about` route of the application and is
+    responsible for returning the 'About' page template along with its specified title.
+
+    :return: The rendered HTML content of the 'About' page template.
+    :rtype: werkzeug.wrappers.response.Response
+    """
     return render_template("about.html", title="About QRWeaver")

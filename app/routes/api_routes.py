@@ -16,6 +16,23 @@ logger = logging.getLogger(__name__)
 
 @api_bp.route("/generate", methods=["POST"])
 def generate_qr():
+    """
+    Handles the QR code generation API endpoint.
+
+    This function processes incoming POST requests, extracts relevant data and settings from
+    the JSON payload, and generates a QR code based on the supplied parameters. It includes rate
+    limiting to prevent abuse of the API. Upon successful QR code generation, the result is
+    returned in JSON format along with rate limit details. If any exceptions occur, it handles
+    them gracefully and returns a JSON-formatted error response.
+
+    :param api_bp.route: The route and HTTP method for the endpoint.
+    :type api_bp.route: str
+    :return: A JSON response containing the generated QR code result, rate limit details, or
+             an error message if the generation fails.
+    :rtype: flask.Response
+    :raises: Returns HTTP 400 for bad requests, HTTP 429 for rate limit violations,
+             and HTTP 500 for unexpected server errors.
+    """
     try:
         # Rate limit check
         allowed, remaining = _limiter.allow(request)
@@ -56,11 +73,31 @@ def generate_qr():
 
 @api_bp.route("/ping")
 def ping():
+    """
+    Handles the 'ping' endpoint in the API which is used to check the status
+    and availability of the service. The endpoint returns a simple JSON
+    response indicating the service is operational.
+
+    :return: A JSON response with keys 'success' indicating operation
+             success and 'status' showing 'ok'.
+    :rtype: flask.Response
+    """
     return jsonify({"success": True, "status": "ok"})
 
 
 @api_bp.route("/version")
 def version():
+    """
+    Returns information about the current API version.
+
+    Provides details including the version number of the API and the build
+    identifier. This endpoint helps clients understand the current version
+    and build of the backend system they are interacting with.
+
+    :returns: A JSON response containing the API version and build
+              information.
+    :rtype: flask.Response
+    """
     return jsonify({
         "success": True,
         "version": "1.0.0",
