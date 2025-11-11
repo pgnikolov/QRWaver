@@ -1,86 +1,108 @@
-// Subtle hover ripple for CTA (cosmetic)
+// ---------------------------------------------------------------------
+// Cosmetic ripple for CTA buttons
+// ---------------------------------------------------------------------
 document.addEventListener('click', e => {
-  const t = e.target.closest('.btn-primary');
-  if(!t) return;
-  t.style.transform = 'translateY(1px) scale(.995)';
-  setTimeout(()=> (t.style.transform=''), 90);
+    const t = e.target.closest('.btn-primary');
+    if (!t) return;
+    t.style.transform = 'translateY(1px) scale(.995)';
+    setTimeout(() => (t.style.transform = ''), 90);
 });
 
-/**
- * Universal QR Generator with SVG overlay frames
- */
-// -----------------------------------------
-// QRWaver — Clean Professional Frontend JS
-// -----------------------------------------
+// ---------------------------------------------------------------------
+// UNIVERSAL QR GENERATOR — WORKS FOR ALL QR TYPES
+// ---------------------------------------------------------------------
 
 function initQRGenerator(type = "text") {
-    const textInput    = document.getElementById("qr-text");
+    const preview      = document.getElementById("qr-preview");
+    const textInput    = document.getElementById("qr-text");   // Only for text QR
     const colorInput   = document.getElementById("qr-color");
     const frameThumbs  = document.getElementById("frame-thumbs");
     const frameColor   = document.getElementById("frame-color");
-    const preview      = document.getElementById("qr-preview");
     const formatSelect = document.getElementById("qr-format");
-
     const downloadBtn  = document.getElementById("downloadBtn");
     const shareBtn     = document.getElementById("shareBtn");
+    window.scheduleQRUpdate = scheduleUpdate;
 
-    let currentSvg        = null;   // чистия QR (SVG)
-    let currentComposited = null;   // SVG + frame -> PNG
+
+    let currentSvg        = null;  // Raw QR SVG
+    let currentComposited = null;  // SVG + Frame -> PNG
     let currentFrame      = "none";
     let debounceTimer     = null;
 
-    if (!textInput || !preview) {
-        console.warn("Missing main QR elements");
+    if (!preview) {
+        console.warn("Missing preview element");
         return;
     }
 
-    //------------------------------------------
-    // Frame selection UI
-    //------------------------------------------
+    // -------------------------------------------------------------
+    // Frame selection
+    // -------------------------------------------------------------
     if (frameThumbs) {
         frameThumbs.addEventListener("click", (e) => {
             const btn = e.target.closest("button.thumb");
             if (!btn) return;
 
-            [...frameThumbs.querySelectorAll(".thumb")].forEach(b => b.classList.remove("selected"));
-            btn.classList.add("selected");
+            [...frameThumbs.querySelectorAll(".thumb")]
+                .forEach(b => b.classList.remove("selected"));
 
+            btn.classList.add("selected");
             currentFrame = btn.dataset.frame || "none";
             composeFrame();
         });
     }
 
-    //------------------------------------------
-    // Live updates
-    //------------------------------------------
+    // -------------------------------------------------------------
+    // Setup listeners
+    // -------------------------------------------------------------
     function scheduleUpdate() {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(updateQR, 250);
     }
 
+    // Text QR uses <textarea id="qr-text">
     textInput?.addEventListener("input", scheduleUpdate);
-    colorInput?.addEventListener("input", scheduleUpdate);
+
+    // Frame color change affects final composition
     frameColor?.addEventListener("input", composeFrame);
 
-    //------------------------------------------
-    // Generate fresh SVG QR
-    //------------------------------------------
-    async function updateQR() {
-        const txt = (textInput.value || "").trim();
+    // If page defines getQRInputData() → auto-bind all controls
+    if (typeof window.getQRInputData === "function") {
+        document.querySelectorAll("input,select,textarea")
+            .forEach(el => el.addEventListener("input", scheduleUpdate));
+    }
 
-        if (!txt) {
-            preview.innerHTML = `<p class="muted">Your QR will appear here</p>`;
-            currentSvg = null;
-            currentComposited = null;
-            enableButtons(false);
-            return;
+    // -------------------------------------------------------------
+    // Main QR Generation Logic
+    // -------------------------------------------------------------
+    async function updateQR() {
+        let dataPayload = null;
+
+        if (type === "text") {
+            const txt = textInput?.value.trim();
+            if (!txt) {
+                preview.innerHTML = `<p class="muted">Your QR will appear here</p>`;
+                currentSvg = null;
+                enableButtons(false);
+                return;
+            }
+            dataPayload = txt;
+        } else {
+            if (typeof window.getQRInputData === "function") {
+                dataPayload = window.getQRInputData();
+            }
+            if (!dataPayload) {
+                preview.innerHTML = `<p class="muted">Your QR will appear here</p>`;
+                currentSvg = null;
+                enableButtons(false);
+                return;
+            }
         }
 
         const payload = {
             type,
-            data: txt,
+            data: dataPayload,
             settings: {
-                color: colorInput?.value || "#000000",
+                color: frameColor?.value || "#000000",
                 size: 512
             }
         };
@@ -93,9 +115,8 @@ function initQRGenerator(type = "text") {
             });
 
             const result = await res.json();
-            if (!result.success) throw new Error("API error");
+            if (!result.success) throw new Error("API returned error");
 
-            // -> това е SVG в base64 data-uri
             currentSvg = result.image;
 
             if (currentFrame === "none") {
@@ -105,7 +126,6 @@ function initQRGenerator(type = "text") {
             } else {
                 await composeFrame();
             }
-
         } catch (err) {
             console.error(err);
             preview.innerHTML = `<p style="color:red;">Error generating QR.</p>`;
@@ -113,14 +133,17 @@ function initQRGenerator(type = "text") {
         }
     }
 
-    //------------------------------------------
+    // -------------------------------------------------------------
+    // Enable / Disable Action Buttons
+    // -------------------------------------------------------------
     function enableButtons(v) {
-        [downloadBtn, shareBtn].forEach(btn => btn && (btn.disabled = !v));
+        if (downloadBtn) downloadBtn.disabled = !v;
+        if (shareBtn) shareBtn.disabled = !v;
     }
 
-    //------------------------------------------
-    // Insert QR into SVG frame (overlay)
-    //------------------------------------------
+    // -------------------------------------------------------------
+    // Compose QR + Frame (SVG injection)
+    // -------------------------------------------------------------
     async function composeFrame() {
         if (!currentSvg) return;
 
@@ -136,15 +159,13 @@ function initQRGenerator(type = "text") {
             const resp = await fetch(framePath);
             let svg = await resp.text();
 
-            // Find QR_ZONE
             const zone = svg.match(/<rect[^>]*id="QR_ZONE"[^>]*>/i);
-            if (!zone) throw new Error("QR_ZONE not found");
+            if (!zone) throw new Error("QR_ZONE not found in frame");
 
             const tag = zone[0];
-
-            const get = (k) => {
-                const m = tag.match(new RegExp(`${k}="([^"]+)"`));
-                return m ? parseFloat(m[1]) : 0;
+            const get = (key) => {
+                const match = tag.match(new RegExp(`${key}="([^"]+)"`));
+                return match ? parseFloat(match[1]) : 0;
             };
 
             const x = get("x");
@@ -152,13 +173,12 @@ function initQRGenerator(type = "text") {
             const w = get("width");
             const h = get("height");
 
-            const color = frameColor?.value || "#000";
+            const frameColorValue = frameColor?.value || "#000";
 
-            svg = svg.replace(/fill="#000000"/g, `fill="${color}"`);
-            svg = svg.replace(/stroke="#000000"/g, `stroke="${color}"`);
+            svg = svg.replace(/fill="#000000"/g, `fill="${frameColorValue}"`);
+            svg = svg.replace(/stroke="#000000"/g, `stroke="${frameColorValue}"`);
             svg = svg.replace(/<g[^>]*id="qr-placeholder-index"[\s\S]*?<\/g>/i, "");
 
-            // Insert QR image in SVG
             const imgTag = `<image x="${x}" y="${y}" width="${w}" height="${h}" href="${currentSvg}" />`;
             svg = svg.replace(/<\/svg>\s*$/i, `${imgTag}</svg>`);
 
@@ -168,19 +188,19 @@ function initQRGenerator(type = "text") {
             enableButtons(true);
 
         } catch (err) {
-            console.error("Frame error:", err);
+            console.error("Frame composition error:", err);
             preview.innerHTML = `<img src="${currentSvg}" class="qr-big">`;
             currentComposited = currentSvg;
             enableButtons(true);
         }
     }
 
-    //------------------------------------------
-    // Convert full SVG to PNG for preview + export
-    //------------------------------------------
+    // -------------------------------------------------------------
+    // Convert SVG → PNG (for download/share)
+    // -------------------------------------------------------------
     async function svgToPng(svgText) {
         const blob = new Blob([svgText], { type: "image/svg+xml" });
-        const url  = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
 
         const img = new Image();
         img.src = url;
@@ -191,74 +211,69 @@ function initQRGenerator(type = "text") {
         canvas.height = img.height;
 
         const ctx = canvas.getContext("2d");
+        ctx.imageSmoothingEnabled = false;
         ctx.drawImage(img, 0, 0);
 
         URL.revokeObjectURL(url);
         return canvas.toDataURL("image/png");
     }
 
-    //------------------------------------------
-    // DOWNLOAD
-    //------------------------------------------
-downloadBtn?.addEventListener("click", async () => {
-    const format = formatSelect.value;
-    const rawSvg = preview.innerHTML;
+    // -------------------------------------------------------------
+    // Download
+    // -------------------------------------------------------------
+    downloadBtn?.addEventListener("click", async () => {
+        const rawSvg = preview.innerHTML;
+        const format = formatSelect.value;
 
-    // SVG директно
-    if (format === "svg") {
-        const blob = new Blob([rawSvg], { type: "image/svg+xml" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "qrwaver.svg";
-        a.click();
+        if (format === "svg") {
+            const blob = new Blob([rawSvg], { type: "image/svg+xml" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "qrwaver.svg";
+            a.click();
+            URL.revokeObjectURL(url);
+            return;
+        }
+
+        const TARGET = 2400;
+        const svgBlob = new Blob([rawSvg], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(svgBlob);
+
+        const img = new Image();
+        img.src = url;
+        await img.decode();
+
+        const scale = TARGET / Math.max(img.width, img.height);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        const ctx = canvas.getContext("2d");
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
         URL.revokeObjectURL(url);
-        return;
-    }
 
-    // PNG / JPEG — рендърваме SVG директно в голяма резолюция (НЕ през малък PNG)
-    const TARGET = 2400;
+        const mime = format === "jpeg" ? "image/jpeg" : "image/png";
+        const out = canvas.toDataURL(mime, 0.98);
 
-    const svgBlob = new Blob([rawSvg], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(svgBlob);
+        const a = document.createElement("a");
+        a.href = out;
+        a.download = `qrwaver.${format}`;
+        a.click();
+    });
 
-    const img = new Image();
-    img.src = url;
-    await img.decode();
-
-    const scale = TARGET / Math.max(img.width, img.height);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = img.width * scale;
-    canvas.height = img.height * scale;
-
-    const ctx = canvas.getContext("2d");
-
-    // ВАЖНО — за остри ръбове
-    ctx.imageSmoothingEnabled = false;
-
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    URL.revokeObjectURL(url);
-
-    const mime = format === "jpeg" ? "image/jpeg" : "image/png";
-    const out = canvas.toDataURL(mime, 0.98);
-
-    const a = document.createElement("a");
-    a.href = out;
-    a.download = `qrwaver.${format}`;
-    a.click();
-});
-
-    //------------------------------------------
-    // SHARE
-    //------------------------------------------
+    // -------------------------------------------------------------
+    // Share
+    // -------------------------------------------------------------
     shareBtn?.addEventListener("click", async () => {
         if (!currentComposited) return;
 
         const format = formatSelect.value;
         if (format === "svg") {
-            alert("Sharing SVG not supported on most devices.");
+            alert("Sharing SVG is not widely supported.");
             return;
         }
 
@@ -268,12 +283,12 @@ downloadBtn?.addEventListener("click", async () => {
         const file = new File([blob], `qrwaver.${format}`, { type: blob.type });
 
         if (navigator.share && navigator.canShare?.({ files: [file] })) {
-            await navigator.share({ files: [file], title: "QR Code" });
+            await navigator.share({ title: "QR Code", files: [file] });
         } else {
-            alert("Sharing not supported.");
+            alert("Sharing not supported on this device.");
         }
     });
 
-    //------------------------------------------
+    // INITIAL LOAD
     updateQR();
 }
