@@ -15,8 +15,8 @@
 
                 <div class="row2">
                     <div>
-                        <label for="qr-color" class="lbl">QR color</label>
-                        <input type="color" id="qr-color" value="#2563EB"/>
+                        <label for="frame-color" class="lbl">Frame color</label>
+                        <input type="color" id="frame-color" value="#000000"/>
                     </div>
                     <div>
                         <label class="lbl" for="qr-format">Download format</label>
@@ -58,14 +58,6 @@
                                  alt="Phone"/>
                         </button>
                     </div>
-
-                    <!-- Only frame COLOR -->
-                    <div class="frame-styles">
-                        <div>
-                            <label for="frame-color" class="lbl">Frame color</label>
-                            <input type="color" id="frame-color" value="#000000"/>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -76,22 +68,12 @@
                 </div>
 
                 <div class="qr-buttons">
-                    <button id="downloadBtn" class="botao" disabled>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                             xmlns="http://www.w3.org/2000/svg" class="mysvg">
-                            <path d="M6 21H18M12 3V17M12 17L17 12M12 17L7 12"
-                                  stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span class="texto">Download</span>
+                    <button id="downloadBtn" class="btn-flat btn-download" disabled>
+                        Download
                     </button>
 
-                    <button id="shareBtn" class="botao purple" disabled>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                             xmlns="http://www.w3.org/2000/svg" class="mysvg">
-                            <path d="M4 12V19C4 19.5523 4.44772 20 5 20H19C19.5523 20 20 19.5523 20 19V12M16 8L12 4M12 4L8 8M12 4V16"
-                                  stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span class="texto">Share</span>
+                    <button id="shareBtn" class="btn-flat btn-share" disabled>
+                        Share
                     </button>
                 </div>
             </div>

@@ -200,49 +200,55 @@ function initQRGenerator(type = "text") {
     //------------------------------------------
     // DOWNLOAD
     //------------------------------------------
-    downloadBtn?.addEventListener("click", async () => {
-        if (!currentSvg && !currentComposited) return;
+downloadBtn?.addEventListener("click", async () => {
+    const format = formatSelect.value;
+    const rawSvg = preview.innerHTML;
 
-        const format = formatSelect.value;
-
-        // SAVE AS SVG (original vector)
-        if (format === "svg") {
-            const svg = preview.innerHTML;
-            const blob = new Blob([svg], { type: "image/svg+xml" });
-            const url = URL.createObjectURL(blob);
-
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "qrwaver.svg";
-            a.click();
-
-            URL.revokeObjectURL(url);
-            return;
-        }
-
-        // PNG / JPEG — high-res 2600+ px
-        const img = new Image();
-        img.src = currentComposited || currentSvg;
-        await img.decode();
-
-        const TARGET = 2600;
-        const scale = TARGET / Math.max(img.width, img.height);
-
-        const canvas = document.createElement("canvas");
-        canvas.width  = img.width  * scale;
-        canvas.height = img.height * scale;
-
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        const mime = (format === "jpeg") ? "image/jpeg" : "image/png";
-        const out  = canvas.toDataURL(mime, 0.95);
-
+    // SVG директно
+    if (format === "svg") {
+        const blob = new Blob([rawSvg], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = out;
-        a.download = `qrwaver.${format}`;
+        a.href = url;
+        a.download = "qrwaver.svg";
         a.click();
-    });
+        URL.revokeObjectURL(url);
+        return;
+    }
+
+    // PNG / JPEG — рендърваме SVG директно в голяма резолюция (НЕ през малък PNG)
+    const TARGET = 2400;
+
+    const svgBlob = new Blob([rawSvg], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+
+    const scale = TARGET / Math.max(img.width, img.height);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+
+    const ctx = canvas.getContext("2d");
+
+    // ВАЖНО — за остри ръбове
+    ctx.imageSmoothingEnabled = false;
+
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    URL.revokeObjectURL(url);
+
+    const mime = format === "jpeg" ? "image/jpeg" : "image/png";
+    const out = canvas.toDataURL(mime, 0.98);
+
+    const a = document.createElement("a");
+    a.href = out;
+    a.download = `qrwaver.${format}`;
+    a.click();
+});
 
     //------------------------------------------
     // SHARE
