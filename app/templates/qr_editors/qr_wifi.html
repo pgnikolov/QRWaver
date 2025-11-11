@@ -2,117 +2,121 @@
 {% block title %}Wi-Fi QR — QRWaver{% endblock %}
 {% block content %}
 
-<section class="container block">
-    <h1 style="font-size:1.8rem; margin-bottom:10px;">Wi-Fi QR Generator</h1>
-    <p class="muted" style="margin-bottom:30px;">
-        Enter your Wi-Fi details — preview updates instantly. Pick a frame if you want.
-    </p>
+    <section class="container block">
+        <h1 style="font-size:1.8rem; margin-bottom:10px;">Wi-Fi QR Generator</h1>
+        <p class="muted" style="margin-bottom:30px;">
+            Enter your Wi-Fi details — preview updates instantly. Pick a frame if you want.
+        </p>
 
-    <div class="qr-editor-grid">
+        <div class="qr-editor-grid">
 
-        <!-- LEFT -->
-        <div class="qr-controls">
+            <!-- LEFT -->
+            <div class="qr-controls">
 
-            <label class="lbl" for="wifi-ssid">Network name</label>
-            <input id="wifi-ssid" type="text" placeholder="SSID" />
+                <label class="lbl" for="wifi-ssid">Network name</label>
+                <input id="wifi-ssid" type="text" placeholder="SSID"/>
 
-            <label class="lbl" for="wifi-encryption">Type of encryption</label>
-            <select id="wifi-encryption">
-                <option value="">Select encryption</option>
-                <option value="WEP">WEP</option>
-                <option value="WPA">WPA / WPA2</option>
-                <option value="nopass">No password</option>
-            </select>
+                <label class="lbl" for="wifi-encryption">Type of encryption</label>
+                <select id="wifi-encryption">
+                    <option value="">Select encryption</option>
+                    <option value="WEP">WEP</option>
+                    <option value="WPA">WPA / WPA2</option>
+                    <option value="nopass">No password</option>
+                </select>
 
-            <label class="lbl" for="wifi-pass">Password</label>
-            <input id="wifi-pass" type="text" placeholder="Wi-Fi password" />
+                <label class="lbl" for="wifi-pass">Password</label>
+                <input id="wifi-pass" type="text" placeholder="Wi-Fi password"/>
 
-            <div style="margin-top:10px;">
-                <input type="checkbox" id="wifi-hidden" />
-                <label for="wifi-hidden">Hidden network</label>
+                <div style="margin-top:10px;">
+                    <input type="checkbox" id="wifi-hidden"/>
+                    <label for="wifi-hidden">Hidden network</label>
+                </div>
+
+                <div class="row2" style="margin-top:25px;">
+                    <div>
+                        <label class="lbl">Frame color</label>
+                        <input type="color" id="frame-color" value="#000000"/>
+                    </div>
+                    <div>
+                        <label class="lbl">Download format</label>
+                        <select id="qr-format">
+                            <option value="png">PNG (High-Res)</option>
+                            <option value="jpeg">JPEG (High-Res)</option>
+                            <option value="svg">SVG (Vector)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Frames -->
+                <div class="frame-picker">
+                    <div class="lbl" style="margin-bottom:8px;">Frame</div>
+
+                    <div class="thumb-grid" id="frame-thumbs" data-selected="none">
+                        <button class="thumb selected" data-frame="none">
+                            <div class="thumb-none">No<br>frame</div>
+                        </button>
+
+                        <button class="thumb" data-frame="frame_2parts">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/two_parts_96.png') }}" alt="">
+                        </button>
+
+                        <button class="thumb" data-frame="frame_whole">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/rounded_96.png') }}" alt="">
+                        </button>
+
+                        <button class="thumb" data-frame="frame_bag">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/bag_96.png') }}" alt="">
+                        </button>
+
+                        <button class="thumb" data-frame="frame_phone">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/phone_96.png') }}" alt="">
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <div class="row2" style="margin-top:25px;">
-                <div>
-                    <label class="lbl">Frame color</label>
-                    <input type="color" id="frame-color" value="#000000"/>
+            <!-- RIGHT -->
+            <div class="qr-preview-wrap">
+                <div id="qr-preview" class="qr-preview">
+                    <p class="muted">Your QR will appear here</p>
                 </div>
-                <div>
-                    <label class="lbl">Download format</label>
-                    <select id="qr-format">
-                        <option value="png">PNG (High-Res)</option>
-                        <option value="jpeg">JPEG (High-Res)</option>
-                        <option value="svg">SVG (Vector)</option>
-                    </select>
-                </div>
-            </div>
 
-            <!-- Frames -->
-            <div class="frame-picker">
-                <div class="lbl" style="margin-bottom:8px;">Frame</div>
-
-                <div class="thumb-grid" id="frame-thumbs" data-selected="none">
-                    <button class="thumb selected" data-frame="none">
-                        <div class="thumb-none">No<br>frame</div>
+                <div class="qr-buttons">
+                    <button id="downloadBtn" class="btn-flat btn-download" disabled>
+                        Download
                     </button>
-
-                    <button class="thumb" data-frame="frame_2parts">
-                        <img src="{{ url_for('static', filename='images/frames_thumbs/two_parts_96.png') }}" alt="">
-                    </button>
-
-                    <button class="thumb" data-frame="frame_whole">
-                        <img src="{{ url_for('static', filename='images/frames_thumbs/rounded_96.png') }}" alt="">
-                    </button>
-
-                    <button class="thumb" data-frame="frame_bag">
-                        <img src="{{ url_for('static', filename='images/frames_thumbs/bag_96.png') }}" alt="">
-                    </button>
-
-                    <button class="thumb" data-frame="frame_phone">
-                        <img src="{{ url_for('static', filename='images/frames_thumbs/phone_96.png') }}" alt="">
+                    <button id="shareBtn" class="btn-flat btn-share" disabled>
+                        Share
                     </button>
                 </div>
             </div>
+
         </div>
+    </section>
 
-        <!-- RIGHT -->
-        <div class="qr-preview-wrap">
-            <div id="qr-preview" class="qr-preview">
-                <p class="muted">Your QR will appear here</p>
-            </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
-            <div class="qr-buttons">
-                <button id="downloadBtn" class="btn-primary" disabled>Download</button>
-                <button id="shareBtn" class="btn-primary" disabled>Share</button>
-            </div>
-        </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const ssid = document.getElementById("wifi-ssid");
+            const pass = document.getElementById("wifi-pass");
+            const enc = document.getElementById("wifi-encryption");
+            const hid = document.getElementById("wifi-hidden");
 
-    </div>
-</section>
+            initQRGenerator("wifi");
 
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+            // кажи на генератора да регенерира при промяна
+            [ssid, pass].forEach(el => el.addEventListener("input", () => window.scheduleQRUpdate?.()));
+            [enc, hid].forEach(el => el.addEventListener("change", () => window.scheduleQRUpdate?.()));
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const ssid = document.getElementById("wifi-ssid");
-  const pass = document.getElementById("wifi-pass");
-  const enc  = document.getElementById("wifi-encryption");
-  const hid  = document.getElementById("wifi-hidden");
-
-  initQRGenerator("wifi");
-
-  // кажи на генератора да регенерира при промяна
-  [ssid, pass].forEach(el => el.addEventListener("input", () => window.scheduleQRUpdate?.()));
-  [enc, hid].forEach(el => el.addEventListener("change", () => window.scheduleQRUpdate?.()));
-
-  window.getQRInputData = () => ({
-    ssid: ssid.value.trim(),
-    password: pass.value.trim(),
-    encryption: enc.value.trim(),
-    hidden: hid.checked,
-  });
-});
-</script>
+            window.getQRInputData = () => ({
+                ssid: ssid.value.trim(),
+                password: pass.value.trim(),
+                encryption: enc.value.trim(),
+                hidden: hid.checked,
+            });
+        });
+    </script>
 
 
 {% endblock %}

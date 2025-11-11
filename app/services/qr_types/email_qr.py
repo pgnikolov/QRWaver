@@ -1,26 +1,22 @@
 from urllib.parse import quote
 
+def build_email_payload(data):
+    email = data.get("to", "")
+    subject = data.get("subject", "")
+    body = data.get("body", "")
 
-def build_email_payload(data: dict) -> str:
-    """
-    Builds the payload for an Email QR code.
+    if not email:
+        return "mailto:"
 
-    Expected input:
-    {
-        "type": "email",
-        "data": {
-            "to": "example@email.com",
-            "subject": "Hello",
-            "body": "This is a test email."
-        }
-    }
+    payload = f"mailto:{email}"
 
-    Returns:
-        str: A properly formatted mailto: URI.
-    """
-    email_data = data.get("data", {})
-    to = email_data.get("to", "")
-    subject = quote(email_data.get("subject", ""))
-    body = quote(email_data.get("body", ""))
+    params = []
+    if subject:
+        params.append(f"subject={quote(subject)}")
+    if body:
+        params.append(f"body={quote(body)}")
 
-    return f"mailto:{to}?subject={subject}&body={body}"
+    if params:
+        payload += "?" + "&".join(params)
+
+    return payload

@@ -1,10 +1,120 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Email QR — QRWaver{% endblock %}
+{% block content %}
 
-</body>
-</html>
+    <section class="container block">
+        <h1 style="font-size:1.8rem; margin-bottom:10px;">Email QR Generator</h1>
+        <p class="muted" style="margin-bottom:30px;">
+            Generate QR codes that open a pre-filled email draft.
+        </p>
+
+        <div class="qr-editor-grid">
+
+            <!-- LEFT -->
+            <div class="qr-controls">
+
+                <!-- EMAIL -->
+                <label class="lbl" for="email-to">Your Email</label>
+                <input id="email-to" class="inpt" type="text" placeholder="name@mail.com"/>
+
+                <!-- SUBJECT -->
+                <label class="lbl" for="email-subject">Subject</label>
+                <input id="email-subject" class="inpt" type="text" placeholder=""/>
+
+                <!-- MESSAGE -->
+                <label class="lbl" for="email-body">Message</label>
+                <textarea id="email-body" class="inpt" rows="5" placeholder=""></textarea>
+
+                <div class="row2" style="margin-top:25px;">
+                    <!-- FRAME COLOR -->
+                    <div>
+                        <label class="lbl">Frame color</label>
+                        <input type="color" id="frame-color" value="#000000"/>
+                    </div>
+
+                    <!-- FORMAT -->
+                    <div>
+                        <label class="lbl">Download format</label>
+                        <select id="qr-format">
+                            <option value="png">PNG (High-Res)</option>
+                            <option value="jpeg">JPEG (High-Res)</option>
+                            <option value="svg">SVG (Vector)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- FRAMES -->
+                <div class="frame-picker">
+                    <div class="lbl" style="margin-bottom:8px;">Frame</div>
+
+                    <div class="thumb-grid" id="frame-thumbs" data-selected="none">
+                        <button class="thumb selected" data-frame="none">
+                            <div class="thumb-none">No<br>frame</div>
+                        </button>
+
+                        <button class="thumb" data-frame="frame_2parts">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/two_parts_96.png') }}" alt="">
+                        </button>
+
+                        <button class="thumb" data-frame="frame_whole">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/rounded_96.png') }}" alt="">
+                        </button>
+
+                        <button class="thumb" data-frame="frame_bag">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/bag_96.png') }}" alt="">
+                        </button>
+
+                        <button class="thumb" data-frame="frame_phone">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/phone_96.png') }}" alt="">
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT -->
+            <div class="qr-preview-wrap">
+                <div id="qr-preview" class="qr-preview">
+                    <p class="muted">Your QR will appear here</p>
+                </div>
+
+                <div class="qr-buttons">
+                    <button id="downloadBtn" class="btn-flat btn-download" disabled>
+                        Download
+                    </button>
+
+                    <button id="shareBtn" class="btn-flat btn-share" disabled>
+                        Share
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            const to = document.getElementById("email-to");
+            const subject = document.getElementById("email-subject");
+            const body = document.getElementById("email-body");
+
+            initQRGenerator("email");
+
+            // ✅ trigger live updates
+            [to, subject, body].forEach(el => {
+                el.addEventListener("input", () => window.scheduleQRUpdate());
+            });
+
+            // ✅ data for backend
+            window.getQRInputData = function () {
+                return {
+                    to: to.value.trim(),
+                    subject: subject.value.trim(),
+                    body: body.value.trim(),
+                };
+            };
+        });
+    </script>
+
+{% endblock %}
