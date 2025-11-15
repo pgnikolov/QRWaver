@@ -54,7 +54,6 @@ class QRService:
         build_event_payload,
         build_crypto_payload,
         build_appstore_payload,
-        build_menu_payload,
         build_social_payload,
     )
     from app.services.qr_types.url_qr import build_url_payload
@@ -73,7 +72,6 @@ class QRService:
         "event": build_event_payload,
         "crypto": build_crypto_payload,
         "appstore": build_appstore_payload,
-        "menu": build_menu_payload,
         "social": build_social_payload,
     }
 

@@ -5,7 +5,7 @@ qr_bp = Blueprint("qr", __name__, url_prefix="/qr")
 VALID_TYPES = {
     "url", "text", "wifi", "email", "phone", "vcard",
     "location", "youtube", "event", "crypto",
-    "appstore", "googleplay", "menu",
+    "appstore", "googleplay",
     "facebook", "instagram", "linkedin",
     "tiktok", "twitter"
 }

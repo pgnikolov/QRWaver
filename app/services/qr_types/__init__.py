@@ -17,7 +17,6 @@ from .youtube_qr import build_youtube_payload
 from .event_qr import build_event_payload
 from .crypto_qr import build_crypto_payload
 from .appstore_qr import build_appstore_payload
-from .menu_qr import build_menu_payload
 
 # Registry map for the QR service
 PAYLOAD_BUILDERS = {
@@ -32,6 +31,5 @@ PAYLOAD_BUILDERS = {
     "youtube": build_youtube_payload,
     "event": build_event_payload,
     "crypto": build_crypto_payload,
-    "appstore": build_appstore_payload,
-    "menu": build_menu_payload,
+    "appstore": build_appstore_payload
 }
