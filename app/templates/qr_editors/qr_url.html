@@ -11,8 +11,8 @@
         <!-- Left: Controls -->
         <div class="qr-controls">
 
-            <label for="qr-text" class="lbl">Enter your website</label>
-            <textarea id="qr-text" rows="3" placeholder="https://"></textarea>
+            <label for="qr-url" class="lbl">Enter your website</label>
+            <textarea id="qr-url" rows="3" placeholder="https://"></textarea>
 
             <div class="row2">
                 <div>
@@ -81,8 +81,22 @@
 </section>
 
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("qr-url");
+
+    // Start generator for URL QR type
     initQRGenerator("url");
+
+    // Live updates
+    input.addEventListener("input", () => window.scheduleQRUpdate());
+
+    // Data provider for this page
+    window.getQRInputData = function () {
+        return input.value.trim();
+    };
+});
 </script>
 
 {% endblock %}
