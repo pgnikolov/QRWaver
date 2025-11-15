@@ -1,21 +1,9 @@
 def build_location_payload(data: dict) -> str:
-    """
-    Builds the payload for a Location QR code.
+    lat = data.get("lat")
+    lng = data.get("lng")
 
-    Expected input:
-    {
-        "type": "location",
-        "data": {
-            "lat": 42.6977,
-            "lng": 23.3219
-        }
-    }
+    if not lat or not lng:
+        return ""
 
-    Returns:
-        str: A geo: URI usable in map apps.
-    """
-    location = data.get("data", {})
-    lat = location.get("lat", 0)
-    lng = location.get("lng", 0)
-
-    return f"geo:{lat},{lng}"
+    # Universal link format (works on iPhone + Android)
+    return f"https://www.google.com/maps/search/?api=1&query={lat},{lng}"

@@ -1,10 +1,241 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}vCard QR — QRWaver{% endblock %}
+{% block content %}
 
-</body>
-</html>
+    <section class="container block">
+        <h1 style="font-size:1.8rem; margin-bottom:10px;">vCard QR Generator</h1>
+        <p class="muted" style="margin-bottom:30px;">
+            Fill in your contact information — scanning the QR saves a full contact card.
+        </p>
+
+        <div class="qr-editor-grid">
+
+            <!-- LEFT FORM -->
+            <div class="qr-controls">
+
+                <!-- Personal -->
+                <div class="row2">
+                    <div>
+                        <label class="lbl">First name</label>
+                        <input id="vc-first" type="text">
+                    </div>
+                    <div>
+                        <label class="lbl">Last name</label>
+                        <input id="vc-last" type="text">
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Contact Info -->
+                <h4 class="lbl">Contact Information</h4>
+                <div class="row2">
+                    <div>
+                        <label class="lbl">Phone</label>
+                        <input id="vc-phone" type="text" placeholder="+359888123456">
+                    </div>
+                    <div>
+                        <label class="lbl">Mobile</label>
+                        <input id="vc-mobile" type="text" placeholder="+359888123456">
+                    </div>
+                </div>
+
+                <div class="row2">
+                    <div>
+                        <label class="lbl">E-mail</label>
+                        <input id="vc-email" type="email">
+                    </div>
+                    <div>
+                        <label class="lbl">Website</label>
+                        <input id="vc-url" type="text" placeholder="https://">
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Company -->
+                <h4 class="lbl">Company Information</h4>
+                <div>
+                    <label class="lbl">Company</label>
+                    <input id="vc-company" type="text">
+                </div>
+
+                <div class="row2">
+                    <div>
+                        <label class="lbl">Job title</label>
+                        <input id="vc-title" type="text">
+                    </div>
+                    <div>
+                        <label class="lbl">Fax</label>
+                        <input id="vc-fax" type="text">
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Location -->
+                <h4 class="lbl">Location</h4>
+                <button id="btn-autofill-address" class="btn-flat" type="button" style="margin-bottom:10px;">
+                    🧭 Autofill from my location
+                </button>
+
+                <input type="hidden" id="vc-lat">
+                <input type="hidden" id="vc-lng">
+
+
+                <label class="lbl">Address</label>
+                <input id="vc-address" type="text">
+
+                <div class="row3">
+                    <div>
+                        <label class="lbl">City</label>
+                        <input id="vc-city" type="text">
+                    </div>
+                    <div>
+                        <label class="lbl">Post code</label>
+                        <input id="vc-postcode" type="text">
+                    </div>
+                    <div>
+                        <label class="lbl">Country</label>
+                        <input id="vc-country" type="text">
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Frame + format -->
+                <div class="row2">
+                    <div>
+                        <label class="lbl">Frame color</label>
+                        <input type="color" id="frame-color" value="#000000"/>
+                    </div>
+                    <div>
+                        <label class="lbl">Download format</label>
+                        <select id="qr-format">
+                            <option value="png">PNG (High-Res)</option>
+                            <option value="jpeg">JPEG (High-Res)</option>
+                            <option value="svg">SVG (Vector)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Frames -->
+                <div class="frame-picker">
+                    <div class="lbl" style="margin-bottom:8px;">Frame</div>
+                    <div class="thumb-grid" id="frame-thumbs" data-selected="none">
+                        <button class="thumb selected" data-frame="none">
+                            <div class="thumb-none">No<br>frame</div>
+                        </button>
+                        <button class="thumb" data-frame="frame_2parts">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/two_parts_96.png') }}" alt="">
+                        </button>
+                        <button class="thumb" data-frame="frame_whole">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/rounded_96.png') }}" alt="">
+                        </button>
+                        <button class="thumb" data-frame="frame_bag">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/bag_96.png') }}" alt="">
+                        </button>
+                        <button class="thumb" data-frame="frame_phone">
+                            <img src="{{ url_for('static', filename='images/frames_thumbs/phone_96.png') }}" alt="">
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="qr-preview-wrap">
+                <div id="qr-preview" class="qr-preview">
+                    <p class="muted">Your vCard QR will appear here</p>
+                </div>
+
+                <div class="qr-buttons">
+                    <button id="downloadBtn" class="btn-flat btn-download" disabled>Download</button>
+                    <button id="shareBtn" class="btn-flat btn-share" disabled>Share</button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    <script>
+
+        document.getElementById("btn-autofill-address").addEventListener("click", () => {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude.toFixed(6);
+                const lng = pos.coords.longitude.toFixed(6);
+
+                document.getElementById("vc-lat").value = lat;
+                document.getElementById("vc-lng").value = lng;
+
+                try {
+                    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`;
+                    const res = await fetch(url, {
+                        headers: {"User-Agent": "QRWaver/1.0 (learning project)"}
+                    });
+                    const data = await res.json();
+
+                    const addr = data.address || {};
+
+                    document.getElementById("vc-address").value = addr.road || addr.neighbourhood || "";
+                    document.getElementById("vc-city").value = addr.city || addr.town || addr.village || "";
+                    document.getElementById("vc-postcode").value = addr.postcode || "";
+                    document.getElementById("vc-country").value = addr.country || "";
+
+                    window.scheduleQRUpdate();
+
+                } catch (err) {
+                    alert("Could not retrieve address automatically.");
+                    console.error(err);
+                }
+            }, () => {
+                alert("Location access denied.");
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+
+            initQRGenerator("vcard");
+
+            const fields = [
+                "vc-first", "vc-last",
+                "vc-phone", "vc-mobile",
+                "vc-email", "vc-url",
+                "vc-company", "vc-title",
+                "vc-fax",
+                "vc-address", "vc-city", "vc-postcode", "vc-country"
+            ];
+
+            fields.forEach(id => {
+                document.getElementById(id)?.addEventListener("input", () => window.scheduleQRUpdate());
+            });
+
+            // DATA PROVIDER
+            window.getQRInputData = function () {
+                return {
+                    first_name: document.getElementById("vc-first").value.trim(),
+                    last_name: document.getElementById("vc-last").value.trim(),
+                    phone: document.getElementById("vc-phone").value.trim(),
+                    mobile: document.getElementById("vc-mobile").value.trim(),
+                    email: document.getElementById("vc-email").value.trim(),
+                    url: document.getElementById("vc-url").value.trim(),
+                    company: document.getElementById("vc-company").value.trim(),
+                    title: document.getElementById("vc-title").value.trim(),
+                    fax: document.getElementById("vc-fax").value.trim(),
+                    address: document.getElementById("vc-address").value.trim(),
+                    city: document.getElementById("vc-city").value.trim(),
+                    postcode: document.getElementById("vc-postcode").value.trim(),
+                    country: document.getElementById("vc-country").value.trim(),
+                };
+            };
+        });
+    </script>
+
+{% endblock %}

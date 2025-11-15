@@ -80,21 +80,7 @@ class QRService:
         qr_type = (qr_type or "").strip().lower()
         errors: Dict[str, str] = {}
 
-        if qr_type == "url":
-            url = ""
-            if isinstance(data, dict):
-                url = (data.get("url") or "").strip()
-            elif isinstance(data, str):
-                url = data.strip()
-
-            if not url:
-                errors["url"] = "URL required."
-            elif not (url.startswith("http://") or url.startswith("https://")):
-                errors["url"] = "URL must start with http:// or https://"
-
-            return errors
-
-        if data is None or (isinstance(data, str) and not data.strip()):
+        if data is None:
             errors["data"] = "Payload required."
 
         return errors
@@ -131,6 +117,27 @@ class QRService:
         img.save(buf)
         return buf.getvalue().decode("utf-8")
 
+    # ---------------- PNG RENDER (VCARD ONLY) ----------------
+    def render_qr_png(self, payload: str, settings: QRRenderSettings) -> bytes:
+        qr = qrcode.QRCode(
+            version=None,
+            error_correction=self._EC_MAP.get(settings.error_correction.upper(), qrcode.constants.ERROR_CORRECT_H),
+            box_size=10,
+            border=settings.border,
+        )
+
+        qr.add_data(payload)
+        qr.make(fit=True)
+
+        fg = _parse_hex_color(settings.color, (0, 0, 0))
+        bg = _parse_hex_color(settings.background, (255, 255, 255))
+
+        img = qr.make_image(fill_color=fg, back_color=bg).convert("RGB")
+
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        return buf.getvalue()
+
     # ---------------- MAIN API ----------------
     def generate(self, qr_type: str, data: Any, settings: Dict[str, Any]) -> Dict[str, Any]:
 
@@ -148,17 +155,30 @@ class QRService:
             border=int(settings.get("border", 4)),
         )
 
-        # ✅ GENERATE SVG QR
-        svg_text = self.render_qr_svg(payload, opts)
+        # --- VCARD → FORCE PNG ---
+        if qr_type == "vcard":
+            png_bytes = self.render_qr_png(payload, opts)
+            png_b64 = base64.b64encode(png_bytes).decode("ascii")
+            filename = f"qrwaver_{qr_type}_{datetime.now():%Y-%m-%dT%H-%M-%S}.png"
 
-        svg_b64 = base64.b64encode(svg_text.encode("utf-8")).decode("ascii")
-        data_uri = f"data:image/svg+xml;base64,{svg_b64}"
+            return {
+                "success": True,
+                "image": f"data:image/png;base64,{png_b64}",
+                "mime": "image/png",
+                "payload": payload,
+                "filename": filename,
+                "width": opts.size,
+                "height": opts.size,
+            }
 
+        # --- OTHERS → SVG ---
+        svg = self.render_qr_svg(payload, opts)
+        svg_b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
         filename = f"qrwaver_{qr_type}_{datetime.now():%Y-%m-%dT%H-%M-%S}.svg"
 
         return {
             "success": True,
-            "image": data_uri,
+            "image": f"data:image/svg+xml;base64,{svg_b64}",
             "mime": "image/svg+xml",
             "payload": payload,
             "filename": filename,
