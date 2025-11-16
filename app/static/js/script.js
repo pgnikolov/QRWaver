@@ -221,21 +221,60 @@ function initQRGenerator(type = "text") {
     // -------------------------------------------------------------
     // Download
     // -------------------------------------------------------------
+    function svgDataUriToText(dataUri) {
+        // Expecting data:image/svg+xml;base64,<BASE64>
+        const m = /^data:image\/svg\+xml;base64,(.+)$/i.exec(dataUri || "");
+        if (!m) return null;
+        const b64 = m[1];
+        try {
+            const binary = atob(b64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return new TextDecoder("utf-8").decode(bytes);
+        } catch (e) {
+            console.warn("Failed to decode SVG data URI", e);
+            return null;
+        }
+    }
+
     downloadBtn?.addEventListener("click", async () => {
-        const rawSvg = preview.innerHTML;
         const format = formatSelect.value;
 
         if (format === "svg") {
-            const blob = new Blob([rawSvg], { type: "image/svg+xml" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "qrwaver.svg";
-            a.click();
-            URL.revokeObjectURL(url);
-            return;
+            // If no frame is selected, we want to save the RAW SVG markup of the QR itself.
+            // `currentSvg` is a data URI (data:image/svg+xml;base64,...) returned by the API.
+            // If a frame IS selected, the preview contains a composed inline <svg> we should save as-is.
+
+            if (currentFrame === "none") {
+                const svgText = svgDataUriToText(currentSvg);
+                if (!svgText) {
+                    // Fallback: if the current image is not SVG (e.g., vCard forced PNG), warn and fall back to PNG download
+                    alert("SVG not available for this QR. Falling back to PNG.");
+                } else {
+                    const blob = new Blob([svgText], { type: "image/svg+xml" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "qrwaver.svg";
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    return;
+                }
+            } else {
+                // Framed variant: save the composed inline SVG from the preview
+                const composedSvg = preview.innerHTML;
+                const blob = new Blob([composedSvg], { type: "image/svg+xml" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "qrwaver.svg";
+                a.click();
+                URL.revokeObjectURL(url);
+                return;
+            }
         }
 
+        const rawSvg = preview.innerHTML;
         const TARGET = 2400;
         const svgBlob = new Blob([rawSvg], { type: "image/svg+xml" });
         const url = URL.createObjectURL(svgBlob);
