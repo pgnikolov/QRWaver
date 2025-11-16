@@ -109,8 +109,9 @@ class QRService:
         img.save(buf)
         return buf.getvalue().decode("utf-8")
 
-    # ---------------- PNG RENDER (VCARD ONLY) ----------------
-    def render_qr_png(self, payload: str, settings: QRRenderSettings) -> bytes:
+    # ---------------- RASTER RENDER (PNG / JPEG) ----------------
+    def render_qr_raster(self, payload: str, settings: QRRenderSettings, fmt: str = "PNG") -> bytes:
+
         qr = qrcode.QRCode(
             version=None,
             error_correction=self._EC_MAP.get(settings.error_correction.upper(), qrcode.constants.ERROR_CORRECT_H),
@@ -127,7 +128,7 @@ class QRService:
         img = qr.make_image(fill_color=fg, back_color=bg).convert("RGB")
 
         buf = BytesIO()
-        img.save(buf, format="PNG")
+        img.save(buf, format=fmt.upper())
         return buf.getvalue()
 
     # ---------------- MAIN API ----------------
@@ -139,23 +140,26 @@ class QRService:
 
         payload = self.build_payload(qr_type, data)
 
+        # format: svg | png | jpeg, default: svg
+        requested_format = str(settings.get("format", "svg") or "svg").lower()
+
         opts = QRRenderSettings(
             size=int(settings.get("size", 512)),
             color=str(settings.get("color", "#000000")),
             background=str(settings.get("background", "#FFFFFF")),
             error_correction=str(settings.get("error_correction", "H")),
             border=int(settings.get("border", 4)),
+            format=requested_format,
         )
 
-        # --- VCARD → FORCE PNG ---
         if qr_type == "vcard":
-            png_bytes = self.render_qr_png(payload, opts)
-            png_b64 = base64.b64encode(png_bytes).decode("ascii")
+            img_bytes = self.render_qr_raster(payload, opts, fmt="PNG")
+            img_b64 = base64.b64encode(img_bytes).decode("ascii")
             filename = f"qrwaver_{qr_type}_{datetime.now():%Y-%m-%dT%H-%M-%S}.png"
 
             return {
                 "success": True,
-                "image": f"data:image/png;base64,{png_b64}",
+                "image": f"data:image/png;base64,{img_b64}",
                 "mime": "image/png",
                 "payload": payload,
                 "filename": filename,
@@ -163,7 +167,29 @@ class QRService:
                 "height": opts.size,
             }
 
-        # --- OTHERS → SVG ---
+        fmt = requested_format
+
+        # Raster (PNG / JPEG)
+        if fmt in ("png", "jpeg", "jpg"):
+            raster_fmt = "PNG" if fmt == "png" else "JPEG"
+            mime = "image/png" if fmt == "png" else "image/jpeg"
+            ext = "png" if fmt == "png" else "jpg"
+
+            img_bytes = self.render_qr_raster(payload, opts, fmt=raster_fmt)
+            img_b64 = base64.b64encode(img_bytes).decode("ascii")
+            filename = f"qrwaver_{qr_type}_{datetime.now():%Y-%m-%dT%H-%M-%S}.{ext}"
+
+            return {
+                "success": True,
+                "image": f"data:{mime};base64,{img_b64}",
+                "mime": mime,
+                "payload": payload,
+                "filename": filename,
+                "width": opts.size,
+                "height": opts.size,
+            }
+
+        # Default: SVG
         svg = self.render_qr_svg(payload, opts)
         svg_b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
         filename = f"qrwaver_{qr_type}_{datetime.now():%Y-%m-%dT%H-%M-%S}.svg"

@@ -23,6 +23,13 @@ instance/
 *.sqlite3
 *.log
 
+# Environment files
+.env
+
+# Logs directory (keep folder via .gitkeep)
+logs/
+!logs/.gitkeep
+
 # IDE files
 .idea/
 *.iml

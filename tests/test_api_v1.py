@@ -42,22 +42,19 @@ def test_version():
 
 def test_generate_text_qr():
     """
-    Tests the QR code generation endpoint for creating a QR code from a
-    plain text payload. The test verifies that the server response is
-    successful and checks the validity of the returned details such as
-    image content, MIME type, size, and success status.
-
-    :raises AssertionError: If any of the assertions fail during the test.
+    Basic smoke test for /api/generate with text payload.
     """
     payload = {
         "type": "text",
         "data": "Hello from automated test!",
-        "settings": {"size": 300, "color": "#2563EB"}
+        # форматът е по избор; за теста изрично казваме SVG
+        "settings": {"size": 300, "color": "#2563EB", "format": "svg"},
     }
     r = requests.post(f"{BASE_URL}/api/generate", json=payload)
     assert r.status_code == 200
     data = r.json()
     assert data["success"] is True
     assert "image" in data
-    assert data["mime"] == "image/png"
+    assert data["mime"] == "image/svg+xml"
     assert data["width"] == 300
+
