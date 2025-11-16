@@ -1,10 +1,93 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}YouTube QR — QRWaver{% endblock %}
+{% block content %}
 
-</body>
-</html>
+<section class="container block">
+    <h1 style="font-size:1.8rem; margin-bottom:10px;">YouTube QR Generator</h1>
+    <p class="muted" style="margin-bottom:30px;">
+        Enter your YouTube channel URL or handle — scanning opens it directly.
+    </p>
+
+    <div class="qr-editor-grid">
+        <div class="qr-controls">
+
+            <label class="lbl" for="social-input">YouTube URL or handle</label>
+            <input id="social-input" type="text" placeholder="https://www.youtube.com/@handle or any YouTube URL" />
+
+            <div class="row2" style="margin-top:25px;">
+                <div>
+                    <label class="lbl">Frame color</label>
+                    <input type="color" id="frame-color" value="#000000" />
+                </div>
+                <div>
+                    <label class="lbl">Download format</label>
+                    <select id="qr-format">
+                        <option value="png">PNG (High-Res)</option>
+                        <option value="jpeg">JPEG (High-Res)</option>
+                        <option value="svg">SVG (Vector)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="frame-picker">
+                <div class="lbl" style="margin-bottom:8px;">Frame</div>
+                <div class="thumb-grid" id="frame-thumbs" data-selected="none">
+                    <button class="thumb selected" data-frame="none">
+                        <div class="thumb-none">No<br>frame</div>
+                    </button>
+                    <button class="thumb" data-frame="frame_2parts">
+                        <img src="{{ url_for('static', filename='images/frames_thumbs/two_parts_96.png') }}" alt="">
+                    </button>
+                    <button class="thumb" data-frame="frame_whole">
+                        <img src="{{ url_for('static', filename='images/frames_thumbs/rounded_96.png') }}" alt="">
+                    </button>
+                    <button class="thumb" data-frame="frame_bag">
+                        <img src="{{ url_for('static', filename='images/frames_thumbs/bag_96.png') }}" alt="">
+                    </button>
+                    <button class="thumb" data-frame="frame_phone">
+                        <img src="{{ url_for('static', filename='images/frames_thumbs/phone_96.png') }}" alt="">
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="qr-preview-wrap">
+            <div id="qr-preview" class="qr-preview">
+                <p class="muted">Your QR will appear here</p>
+            </div>
+            <div class="qr-buttons">
+                <button id="downloadBtn" class="btn-flat btn-download" disabled>Download</button>
+                <button id="shareBtn" class="btn-flat btn-share" disabled>Share</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("social-input");
+
+    initQRGenerator("url");
+
+    window.getQRInputData = function () {
+        const raw = input.value.trim();
+        if (!raw) return null;
+
+        let url = raw;
+
+        if (!/^https?:\/\//i.test(raw)) {
+            // ако е handle или име → правим @handle
+            const handle = raw.startsWith("@") ? raw : `@${raw}`;
+            url = `https://www.youtube.com/${handle}`;
+        }
+
+        return { url };
+    };
+
+    input.addEventListener("input", () => window.scheduleQRUpdate?.());
+});
+</script>
+
+{% endblock %}

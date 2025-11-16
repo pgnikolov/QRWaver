@@ -5,14 +5,14 @@
 <section class="container block">
     <h1 style="font-size:1.8rem; margin-bottom:10px;">Facebook QR Generator</h1>
     <p class="muted" style="margin-bottom:30px;">
-        Enter your Facebook page or profile name — scanning opens it directly.
+        Enter your Facebook page URL or username — scanning opens it directly.
     </p>
 
     <div class="qr-editor-grid">
         <div class="qr-controls">
 
-            <label class="lbl" for="social-username">Facebook username / page</label>
-            <input id="social-username" type="text" placeholder="yourpage or username" />
+            <label class="lbl" for="social-input">Facebook URL or username</label>
+            <input id="social-input" type="text" placeholder="https://www.facebook.com/yourpage or just username" />
 
             <div class="row2" style="margin-top:25px;">
                 <div>
@@ -68,23 +68,26 @@
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const input = document.getElementById("social-username");
+    const input = document.getElementById("social-input");
 
-    // Tell the system this page is SOCIAL → facebook
+    // Типът за backend-а е URL
+    initQRGenerator("url");
+
     window.getQRInputData = function () {
-        const val = input.value.trim();
-        if (!val) return null;
+        const raw = input.value.trim();
+        if (!raw) return null;
 
-        // Full link typed? → use it directly
-        if (val.startsWith("http://") || val.startsWith("https://")) {
-            return { network: "facebook", username: val.replace("https://www.facebook.com/", "") };
+        let url = raw;
+
+        // ако не започва с http(s) → приемаме, че е username
+        if (!/^https?:\/\//i.test(raw)) {
+            url = `https://www.facebook.com/${raw}`;
         }
 
-        // Username only
-        return { network: "facebook", username: val };
+        return { url };
     };
 
-    initQRGenerator("social");
+    input.addEventListener("input", () => window.scheduleQRUpdate?.());
 });
 </script>
 
