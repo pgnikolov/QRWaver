@@ -48,12 +48,8 @@ class QRService:
     from app.services.qr_types import (
         build_phone_payload,
         build_email_payload,
-        build_location_payload,
         build_vcard_payload,
         build_youtube_payload,
-        build_event_payload,
-        build_crypto_payload,
-        build_appstore_payload,
         build_social_payload,
     )
     from app.services.qr_types.url_qr import build_url_payload
@@ -67,11 +63,7 @@ class QRService:
         "email": build_email_payload,
         "phone": build_phone_payload,
         "vcard": build_vcard_payload,
-        "location": build_location_payload,
         "youtube": build_youtube_payload,
-        "event": build_event_payload,
-        "crypto": build_crypto_payload,
-        "appstore": build_appstore_payload,
         "social": build_social_payload,
     }
 

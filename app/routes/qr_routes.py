@@ -4,11 +4,10 @@ qr_bp = Blueprint("qr", __name__, url_prefix="/qr")
 
 VALID_TYPES = {
     "url", "text", "wifi", "email", "phone", "vcard",
-    "location", "youtube", "event", "crypto",
-    "appstore", "googleplay",
-    "facebook", "instagram", "linkedin",
+    "youtube", "facebook", "instagram", "linkedin",
     "tiktok", "twitter"
 }
+
 
 @qr_bp.route("/<qr_type>")
 def qr_editor(qr_type):

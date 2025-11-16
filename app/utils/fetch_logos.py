@@ -35,7 +35,6 @@ ICONS = {
     "googleplay.svg": "googleplay",
     "bitcoin.svg": "bitcoin",
     "crypto.svg": "ethereum",        # good fallback
-    "linkedin.svg": "utensils",    # fallback from FontAwesome-like
 }
 
 

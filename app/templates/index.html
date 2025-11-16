@@ -2,61 +2,56 @@
 {% block title %}QRWaver — Generate your QR codes{% endblock %}
 
 {% block content %}
-<section class="hero container">
-  <div class="hero-text">
-    <h1>Create, Style & Download Your QR Codes</h1>
-    <p>Generate QR codes for links, Wi-Fi, contact cards, menus, and more — all styled your way.</p>
-    <div class="hero-cta">
-      <a class="btn btn-primary" href="/qr/url">Start Now</a>
-      <a class="btn btn-ghost" href="#types">Browse Types</a>
-    </div>
-  </div>
-  <div class="hero-preview">
-    <div class="mock-card glass">
-      <div class="mock-qr"></div>
-      <div class="mock-ui">
-        <div class="chip">Size: 512px</div>
-        <div class="chip">EC: H</div>
-        <div class="chip">Rounded</div>
-      </div>
-      <button class="btn btn-primary btn-block">Download PNG</button>
-    </div>
-  </div>
-</section>
+    <section class="hero container">
+        <div class="hero-text">
+            <h1>Create, Style & Download Your QR Codes</h1>
+            <p>Generate QR codes for links, Wi-Fi, contact cards, menus, and more — all styled your way.</p>
+            <div class="hero-cta">
+                <a class="btn btn-primary" href="/qr/url">Start Now</a>
+                <a class="btn btn-ghost" href="#types">Browse Types</a>
+            </div>
+        </div>
+        <div class="hero-preview">
+            <div class="mock-card glass">
+                <div class="mock-qr"></div>
+                <div class="mock-ui">
+                    <div class="chip">Size: 512px</div>
+                    <div class="chip">EC: H</div>
+                    <div class="chip">Rounded</div>
+                </div>
+                <button class="btn btn-primary btn-block">Download PNG</button>
+            </div>
+        </div>
+    </section>
 
-<section id="types" class="container block">
-  <h2>QR Code Types</h2>
-  <p class="muted">Choose the format you need to start generating.</p>
+    <section id="types" class="container block">
+        <h2>QR Code Types</h2>
+        <p class="muted">Choose the format you need to start generating.</p>
 
-  <div class="qr-grid">
-    {% set qr_types = [
+        <div class="qr-grid">
+            {% set qr_types = [
       ('URL', 'qr.svg'),
       ('Text', 'text.svg'),
       ('Wi-Fi', 'wifi.svg'),
       ('Email', 'email.svg'),
       ('Phone', 'phone.svg'),
-      ('vCard', 'vcard.svg'),
-      ('Location', 'location.svg'),
-      ('Event', 'event.svg'),
-      ('Crypto', 'crypto.svg'),
-      ('App Store', 'appstore.svg'),
-      ('Google Play', 'googleplay.svg')
+      ('vCard', 'vcard.svg')
     ] %}
-    {% for name, icon in qr_types %}
-      <a href="/qr/{{ name|lower }}" class="qr-card">
-        <img src="{{ url_for('static', filename='images/icons/' + icon) }}" alt="{{ name }}">
-        <p>{{ name }}</p>
-      </a>
-    {% endfor %}
-  </div>
-</section>
+            {% for name, icon in qr_types %}
+                <a href="/qr/{{ name|lower }}" class="qr-card">
+                    <img src="{{ url_for('static', filename='images/icons/' + icon) }}" alt="{{ name }}">
+                    <p>{{ name }}</p>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
 
-<section class="container block">
-  <h2>Social QR Codes</h2>
-  <p class="muted">Link your followers directly to your profiles.</p>
+    <section class="container block">
+        <h2>Social QR Codes</h2>
+        <p class="muted">Link your followers directly to your profiles.</p>
 
-  <div class="qr-grid">
-    {% set socials = [
+        <div class="qr-grid">
+            {% set socials = [
       ('Facebook', 'facebook.svg'),
       ('Instagram', 'instagram.svg'),
       ('LinkedIn', 'linkedin.svg'),
@@ -64,12 +59,12 @@
       ('TikTok', 'tiktok.svg'),
       ('YouTube', 'youtube.svg')
     ] %}
-    {% for name, icon in socials %}
-      <a href="/qr/{{ name|lower }}" class="qr-card">
-        <img src="{{ url_for('static', filename='images/icons/' + icon) }}" alt="{{ name }}">
-        <p>{{ name }}</p>
-      </a>
-    {% endfor %}
-  </div>
-</section>
+            {% for name, icon in socials %}
+                <a href="/qr/{{ name|lower }}" class="qr-card">
+                    <img src="{{ url_for('static', filename='images/icons/' + icon) }}" alt="{{ name }}">
+                    <p>{{ name }}</p>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
 {% endblock %}
