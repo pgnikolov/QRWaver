@@ -1,21 +1,27 @@
 def build_social_payload(data: dict) -> str:
     """
-    Builds payload for a social profile QR.
-
-    Example:
-        {"type": "social", "data": {"platform": "instagram", "username": "qrweaver"}}
+    Build direct URLs for social network QR codes.
+    Works with both username and full URLs.
     """
-    d = data.get("data", {})
-    platform = d.get("platform", "").lower()
-    username = d.get("username", "").lstrip("@")
 
+    network = data.get("network", "").lower().strip()
+    username = data.get("username", "").strip()
+
+    if not network or not username:
+        return ""
+
+    # If full URL, return as is
+    if username.startswith("http://") or username.startswith("https://"):
+        return username
+
+    # Otherwise, build from username
     base_urls = {
-        "instagram": f"https://instagram.com/{username}",
-        "facebook": f"https://facebook.com/{username}",
-        "twitter": f"https://twitter.com/{username}",
-        "tiktok": f"https://tiktok.com/@{username}",
-        "linkedin": f"https://linkedin.com/in/{username}",
-        "youtube": f"https://youtube.com/@{username}",
+        "facebook": f"https://www.facebook.com/{username}",
+        "instagram": f"https://www.instagram.com/{username}",
+        "linkedin": f"https://www.linkedin.com/in/{username}",
+        "twitter": f"https://www.twitter.com/{username}",
+        "tiktok": f"https://www.tiktok.com/@{username}",
+        "youtube": f"https://www.youtube.com/@{username}",
     }
 
-    return base_urls.get(platform, f"https://{platform}.com/{username}")
+    return base_urls.get(network, "")
