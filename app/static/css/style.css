@@ -210,6 +210,165 @@ h2 {
     text-decoration: none
 }
 
+/* --- Homepage QR Scanner Preview --- */
+.scanner-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0; /* keep tight within hero */
+}
+
+.scanner-frame {
+    width: 300px;
+    height: 300px;
+    border: 4px solid #4a90e2; /* default variant-1, overridden by variants */
+    border-radius: 20px;
+    position: relative;
+    box-shadow:
+        0 0 20px rgba(74, 144, 226, 0.3),
+        inset 0 0 20px rgba(74, 144, 226, 0.1);
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        linear-gradient(to right, rgba(74, 144, 226, 0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(74, 144, 226, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    z-index: 1;
+}
+
+.qr-code {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 180px;
+    color: #000000;
+    z-index: 2;
+}
+
+.scan-line {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #4a90e2, transparent);
+    box-shadow: 0 0 10px #4a90e2;
+    top: 0;
+    z-index: 3;
+    animation: scan 2s linear infinite;
+}
+
+.corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-color: #4a90e2;
+    border-style: solid;
+    z-index: 3;
+}
+
+.corner-tl { top: -4px; left: -4px; border-width: 4px 0 0 4px; border-radius: 10px 0 0 0; }
+.corner-tr { top: -4px; right: -4px; border-width: 4px 4px 0 0; border-radius: 0 10px 0 0; }
+.corner-bl { bottom: -4px; left: -4px; border-width: 0 0 4px 4px; border-radius: 0 0 0 10px; }
+.corner-br { bottom: -4px; right: -4px; border-width: 0 4px 4px 0; border-radius: 0 0 10px 0; }
+
+@keyframes scan {
+    0% { top: 0; }
+    50% { top: 100%; }
+    100% { top: 0; }
+}
+
+.color-selector {
+    margin: 10px auto 0; /* placed under hero */
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #ddd;
+    transition: transform 0.2s;
+}
+
+.color-option:hover { transform: scale(1.1); }
+.color-option.active { border-color: #333; transform: scale(1.1); }
+
+.color-blue { background-color: #4a90e2; }
+.color-red { background-color: #e74c3c; }
+.color-green { background-color: #2ecc71; }
+.color-purple { background-color: #9b59b6; }
+.color-orange { background-color: #e67e22; }
+
+/* Variants */
+.variant-1 .scanner-frame {
+    border-color: #4a90e2;
+    box-shadow:
+        0 0 20px rgba(74, 144, 226, 0.3),
+        inset 0 0 20px rgba(74, 144, 226, 0.1);
+}
+.variant-1 .scan-line { background: linear-gradient(90deg, transparent, #4a90e2, transparent); box-shadow: 0 0 10px #4a90e2; }
+.variant-1 .corner { border-color: #4a90e2; }
+
+.variant-2 .scanner-frame {
+    border-color: #e74c3c;
+    box-shadow:
+        0 0 20px rgba(231, 76, 60, 0.3),
+        inset 0 0 20px rgba(231, 76, 60, 0.1);
+}
+.variant-2 .scan-line { background: linear-gradient(90deg, transparent, #e74c3c, transparent); box-shadow: 0 0 10px #e74c3c; }
+.variant-2 .corner { border-color: #e74c3c; }
+
+.variant-3 .scanner-frame {
+    border-color: #2ecc71;
+    box-shadow:
+        0 0 20px rgba(46, 204, 113, 0.3),
+        inset 0 0 20px rgba(46, 204, 113, 0.1);
+}
+.variant-3 .scan-line { background: linear-gradient(90deg, transparent, #2ecc71, transparent); box-shadow: 0 0 10px #2ecc71; }
+.variant-3 .corner { border-color: #2ecc71; }
+
+.variant-4 .scanner-frame {
+    border-color: #9b59b6;
+    box-shadow:
+        0 0 20px rgba(155, 89, 182, 0.3),
+        inset 0 0 20px rgba(155, 89, 182, 0.1);
+}
+.variant-4 .scan-line { background: linear-gradient(90deg, transparent, #9b59b6, transparent); box-shadow: 0 0 10px #9b59b6; }
+.variant-4 .corner { border-color: #9b59b6; }
+
+.variant-5 .scanner-frame {
+    border-color: #e67e22;
+    box-shadow:
+        0 0 20px rgba(230, 126, 34, 0.3),
+        inset 0 0 20px rgba(230, 126, 34, 0.1);
+}
+.variant-5 .scan-line { background: linear-gradient(90deg, transparent, #e67e22, transparent); box-shadow: 0 0 10px #e67e22; }
+.variant-5 .corner { border-color: #e67e22; }
+
+/* Responsive sizing for scanner */
+@media (max-width: 600px) {
+    .scanner-frame { width: 250px; height: 250px; }
+    .qr-code { font-size: 140px; }
+}
+
+@media (max-width: 400px) {
+    .scanner-frame { width: 200px; height: 200px; }
+    .qr-code { font-size: 100px; }
+}
+
 .footer a:hover {
     color: var(--txt)
 }
