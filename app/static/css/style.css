@@ -26,6 +26,52 @@ body {
     background: var(--bg);
 }
 
+/* Header & navigation */
+.site-header {
+    height: 120px; /* fixed header height */
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+}
+
+.nav-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 100%;
+    display: flex;
+    align-items: center; /* center nav items vertically within the header */
+    justify-content: space-between;
+}
+
+.logo {
+    height: 100%;
+    display: flex;
+    align-items: center; /* keep clickable area full height and vertically centered */
+}
+
+.logo img {
+    height: 100%; /* make the logo image fill the header height */
+    width: auto;
+    display: block; /* remove inline-image baseline gap */
+}
+
+.main-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 8px;
+}
+
+.main-nav a {
+    display: flex;
+    align-items: center; /* ensure links align to full header height nicely */
+    height: 100%;
+    padding: 0 10px;
+    text-decoration: none;
+    color: var(--txt);
+}
+
 /* containers */
 .container {
     max-width: 1100px;
