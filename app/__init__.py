@@ -1,15 +1,39 @@
 # app/__init__.py
 from flask import Flask, jsonify
+from werkzeug.exceptions import HTTPException, NotFound
 from flask_cors import CORS
-from app.config.settings import Config, LOG_DIR, LOG_FILE
+from app.config.settings import Config, LOG_DIR, LOG_FILE, DevelopmentConfig, ProductionConfig
 from app.extensions.extensions import init_extensions, db
 import logging
 import os
+from app.config.settings import R2_PUBLIC_BASE_URL
 
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_object(Config)
+
+    # Select config based on environment
+    config_name = os.getenv("APP_SETTINGS")
+    if not config_name:
+        env = (os.getenv("FLASK_ENV") or os.getenv("ENV") or "").lower()
+        if env == "production":
+            config = ProductionConfig
+        elif env == "development" or os.getenv("DEBUG", "").lower() in ("1", "true", "yes"):
+            config = DevelopmentConfig
+        else:
+            config = Config
+    else:
+        # Support simple names
+        mapping = {
+            "Config": Config,
+            "DevelopmentConfig": DevelopmentConfig,
+            "ProductionConfig": ProductionConfig,
+            "dev": DevelopmentConfig,
+            "prod": ProductionConfig,
+        }
+        config = mapping.get(config_name, Config)
+
+    app.config.from_object(config)
 
     # Init DB + JWT + CORS
     init_extensions(app)
@@ -45,6 +69,10 @@ def create_app():
     logger.addHandler(console_handler)
 
     app.logger.info("🚀 QRWaver backend initialised")
+    try:
+        app.logger.info(f"✅ Using config: {config.__name__}")
+    except Exception:
+        pass
 
     # -------------------------------
     # Register blueprints
@@ -69,18 +97,40 @@ def create_app():
     app.register_blueprint(tracking_bp)
 
     # -------------------------------
-    # Global JSON error handler
+    # HTTP error handlers (reduce noise from expected 404s)
+    # -------------------------------
+    @app.errorhandler(NotFound)
+    def handle_404(e: NotFound):
+        # Do not log 404 as ERROR; it's expected sometimes (e.g., favicon)
+        app.logger.info(f"404 Not Found: {getattr(e, 'description', 'Resource not found')}")
+        return jsonify({
+            "success": False,
+            "error": "Not Found",
+            "code": 404
+        }), 404
+
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(e: HTTPException):
+        # Generic HTTP exceptions (4xx/5xx with an HTTP code)
+        level = app.logger.warning if 400 <= e.code < 500 else app.logger.error
+        level(f"HTTP {e.code}: {e.description}")
+        return jsonify({
+            "success": False,
+            "error": e.description,
+            "code": e.code
+        }), e.code
+
+    # -------------------------------
+    # Global JSON error handler (non-HTTP exceptions)
     # -------------------------------
     @app.errorhandler(Exception)
     def handle_exception(e):
-        code = getattr(e, "code", 500)
-        message = str(e)
-        app.logger.exception(f"Unhandled exception: {message}")
+        app.logger.exception(f"Unhandled exception: {e}")
         return jsonify({
             "success": False,
-            "error": message,
-            "code": code
-        }), code
+            "error": "Internal Server Error",
+            "code": 500
+        }), 500
 
     # -------------------------------
     # Health & version
@@ -96,6 +146,30 @@ def create_app():
             "version": "1.0.0",
             "build": "backend-stable"
         })
+
+    # Quiet favicon 404 noise if no static favicon is present
+    @app.route('/favicon.ico')
+    def favicon():
+        # If you add a static favicon later, replace with send_from_directory
+        return "", 204
+
+    # ---------------------------------
+    # Legacy image paths redirect to R2
+    # ---------------------------------
+    @app.get('/users/<int:user_id>/<path:filename>')
+    def legacy_user_file(user_id: int, filename: str):
+        """
+        Redirect old local file paths to Cloudflare R2 public CDN to avoid 404s
+        and keep previously shared links working.
+        """
+        from flask import redirect
+        base = (R2_PUBLIC_BASE_URL or '').rstrip('/')
+        if not base:
+            # No CDN configured; return 404 gracefully
+            app.logger.info("R2_PUBLIC_BASE_URL not set; cannot redirect legacy /users path")
+            return jsonify({"success": False, "error": "Not Found", "code": 404}), 404
+        target = f"{base}/users/{user_id}/{filename}"
+        return redirect(target, code=302)
 
     # -------------------------------
     # DEV: Auto-create tables

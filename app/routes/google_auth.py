@@ -30,8 +30,8 @@ def google_login():
         # If user doesn't exist → create or attach google_id
         user = UserService.create_or_get_google_user(email=email, google_id=idinfo.get("sub"))
 
-        # Generate JWT
-        access_token = create_access_token(identity=user.id)
+        # Generate JWT (use string identity consistently across app)
+        access_token = create_access_token(identity=str(user.id))
 
         response = jsonify({
             "success": True,

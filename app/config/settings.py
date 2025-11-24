@@ -38,9 +38,11 @@ class Config:
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev_jwt_secret")
     JWT_TOKEN_LOCATION = ["cookies"]
     JWT_COOKIE_HTTPONLY = True
+    # In development we keep cookies non-secure; ProductionConfig overrides to True
     JWT_COOKIE_SECURE = False
     JWT_COOKIE_SAMESITE = "Lax"
     # Allow small clock skew when validating JWTs to avoid "Token used too early" errors
+    # ProductionConfig tightens this to 30s.
     JWT_DECODE_LEEWAY = 60  # seconds
 
     JWT_COOKIE_CSRF_PROTECT = False
@@ -54,3 +56,7 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     ENV = "production"
     DEBUG = False
+    # Harden cookies for production
+    JWT_COOKIE_SECURE = True
+    # Tighter leeway in production
+    JWT_DECODE_LEEWAY = 30
