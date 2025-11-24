@@ -55,11 +55,19 @@ def logout():
 
 @auth_bp.route("/google", methods=["GET"])
 def google_login():
+    """
+    Start Google OAuth Code flow. Prefer building the redirect_uri dynamically to
+    match the current host (prod or dev). Fall back to env var if explicitly set.
+    """
+    # Prefer dynamic URL to avoid env mismatches between dev/prod
+    dynamic_redirect_uri = url_for("auth.google_callback", _external=True)
+    redirect_uri = GOOGLE_REDIRECT_URI or dynamic_redirect_uri
+
     google_oauth_url = (
         "https://accounts.google.com/o/oauth2/v2/auth"
         "?response_type=code"
         f"&client_id={GOOGLE_CLIENT_ID}"
-        f"&redirect_uri={GOOGLE_REDIRECT_URI}"
+        f"&redirect_uri={redirect_uri}"
         "&scope=openid%20email%20profile"
         "&prompt=select_account"
         "&access_type=offline"
@@ -80,11 +88,15 @@ def google_callback():
         import requests
 
         token_url = "https://oauth2.googleapis.com/token"
+        # Use the same redirect_uri as used at the authorize step
+        dynamic_redirect_uri = url_for("auth.google_callback", _external=True)
+        redirect_uri = GOOGLE_REDIRECT_URI or dynamic_redirect_uri
+
         data = {
             "code": code,
             "client_id": GOOGLE_CLIENT_ID,
             "client_secret": GOOGLE_CLIENT_SECRET,
-            "redirect_uri": GOOGLE_REDIRECT_URI,
+            "redirect_uri": redirect_uri,
             "grant_type": "authorization_code"
         }
 
