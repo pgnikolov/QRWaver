@@ -7,7 +7,6 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for QR icon in scanner preview -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
     <link rel="icon" href="{{ url_for('static', filename='images/icons/qr.svg') }}">
@@ -24,10 +23,13 @@
     <nav class="main-nav">
       <ul>
         <li><a href="{{ url_for('main.index') }}">QR Codes</a></li>
-        <li><a href="{{ url_for('api.ping') }}">API</a></li>
         <li><a href="#">Why QRWaver?</a></li>
         <li><a href="#">Docs</a></li>
-        <li><a href="#" class="btn">Dashboard</a></li>
+
+        <!-- LOGIN / REGISTER / DASHBOARD -->
+        <li><a href="{{ url_for('auth.login_page') }}">Login</a></li>
+        <li><a href="{{ url_for('auth.register_page') }}">Register</a></li>
+        <li><a href="{{ url_for('main.dashboard_page') }}" class="btn">Dashboard</a></li>
       </ul>
     </nav>
   </div>

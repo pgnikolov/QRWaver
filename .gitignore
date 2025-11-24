@@ -18,6 +18,14 @@ dist/
 env/
 venv/
 
+# Test/coverage caches
+.pytest_cache/
+.coverage*
+htmlcov/
+
+# Editors
+.vscode/
+
 # Flask specific
 instance/
 *.sqlite3

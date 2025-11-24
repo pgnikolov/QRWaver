@@ -1,6 +1,9 @@
 from flask import Blueprint, render_template
 from datetime import datetime, timezone
 
+from flask_jwt_extended import jwt_required
+
+from app.routes.auth_routes import auth_bp
 
 main_bp = Blueprint("main", __name__)
 
@@ -48,3 +51,9 @@ def about():
     :rtype: werkzeug.wrappers.response.Response
     """
     return render_template("about.html", title="About QRWeaver")
+
+
+@main_bp.get("/dashboard")
+@jwt_required(optional=True)
+def dashboard_page():
+    return render_template("dashboard.html")

@@ -1,50 +1,30 @@
 from __future__ import annotations
 
+import io
 from dataclasses import dataclass
-from io import BytesIO
-from typing import Any, Dict, Optional, Tuple
-from datetime import datetime
-import base64
+from typing import Any, Dict
 import qrcode
 import qrcode.image.svg
 
-RGB = Tuple[int, int, int]
-
-
-def _parse_hex_color(s: str, default: RGB) -> RGB:
-    if not s:
-        return default
-    s = s.strip().lstrip("#")
-    if len(s) == 3:
-        s = "".join(c * 2 for c in s)
-    if len(s) != 6:
-        return default
-    try:
-        return tuple(int(s[i:i+2], 16) for i in (0, 2, 4))
-    except:
-        return default
+from app.services.r2_service import R2Service
 
 
 @dataclass
 class QRRenderSettings:
     size: int = 512
-    color: str = "#000000"
-    background: str = "#FFFFFF"
-    error_correction: str = "H"
-    border: int = 4
-    overlay_logo_path: Optional[str] = None
-    format: str = "svg"
-    frame: Optional[Dict[str, Any]] = None
 
 
 class QRService:
-    _EC_MAP = {
-        "L": qrcode.constants.ERROR_CORRECT_L,
-        "M": qrcode.constants.ERROR_CORRECT_M,
-        "Q": qrcode.constants.ERROR_CORRECT_Q,
-        "H": qrcode.constants.ERROR_CORRECT_H,
-    }
+    """
+    Централен QR service:
+    - build_payload(...) -> string (използва qr_types/*)
+    - генерира QR SVG/PNG/JPG
+    - качва в R2
+    """
 
+    # ------------------------------------------------
+    # PAYLOAD BUILDERS
+    # ------------------------------------------------
     from app.services.qr_types import (
         build_phone_payload,
         build_email_payload,
@@ -67,139 +47,111 @@ class QRService:
         "social": build_social_payload,
     }
 
-    # ---------------- VALIDATION ----------------
-    def validate(self, qr_type: str, data: Any) -> Dict[str, str]:
-        qr_type = (qr_type or "").strip().lower()
-        errors: Dict[str, str] = {}
-
-        if data is None:
-            errors["data"] = "Payload required."
-
-        return errors
-
-    # ---------------- PAYLOAD ----------------
     def build_payload(self, qr_type: str, data: Any) -> str:
+        qr_type = (qr_type or "").strip().lower()
         builder = self.PAYLOAD_BUILDERS.get(qr_type)
         if not builder:
             raise ValueError(f"Unsupported QR type: {qr_type}")
         return builder(data)
 
-    # ---------------- SVG RENDER ----------------
-    def render_qr_svg(self, payload: str, settings: QRRenderSettings) -> str:
+    # ------------------------------------------------
+    # RAW QR GENERATION
+    # ------------------------------------------------
+    def _generate_svg_bytes(self, text: str, size: int = 512) -> bytes:
+        factory = qrcode.image.svg.SvgPathImage
         qr = qrcode.QRCode(
             version=None,
-            error_correction=self._EC_MAP.get(settings.error_correction.upper(), qrcode.constants.ERROR_CORRECT_H),
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
             box_size=10,
-            border=settings.border,
+            border=4,
         )
-
-        qr.add_data(payload)
+        qr.add_data(text)
         qr.make(fit=True)
 
-        fg_r, fg_g, fg_b = _parse_hex_color(settings.color, (0, 0, 0))
-        bg_r, bg_g, bg_b = _parse_hex_color(settings.background, (255, 255, 255))
-
-        img = qr.make_image(
-            image_factory=qrcode.image.svg.SvgPathImage,
-            fill_color=f"rgb({fg_r},{fg_g},{fg_b})",
-            back_color=f"rgb({bg_r},{bg_g},{bg_b})"
-        )
-
-        buf = BytesIO()
+        img = qr.make_image(image_factory=factory)
+        buf = io.BytesIO()
         img.save(buf)
-        return buf.getvalue().decode("utf-8")
-
-    # ---------------- RASTER RENDER (PNG / JPEG) ----------------
-    def render_qr_raster(self, payload: str, settings: QRRenderSettings, fmt: str = "PNG") -> bytes:
-
-        qr = qrcode.QRCode(
-            version=None,
-            error_correction=self._EC_MAP.get(settings.error_correction.upper(), qrcode.constants.ERROR_CORRECT_H),
-            box_size=10,
-            border=settings.border,
-        )
-
-        qr.add_data(payload)
-        qr.make(fit=True)
-
-        fg = _parse_hex_color(settings.color, (0, 0, 0))
-        bg = _parse_hex_color(settings.background, (255, 255, 255))
-
-        img = qr.make_image(fill_color=fg, back_color=bg).convert("RGB")
-
-        buf = BytesIO()
-        img.save(buf, format=fmt.upper())
         return buf.getvalue()
 
-    # ---------------- MAIN API ----------------
-    def generate(self, qr_type: str, data: Any, settings: Dict[str, Any]) -> Dict[str, Any]:
-
-        errors = self.validate(qr_type, data)
-        if errors:
-            return {"success": False, "errors": errors}
-
-        payload = self.build_payload(qr_type, data)
-
-        # format: svg | png | jpeg, default: svg
-        requested_format = str(settings.get("format", "svg") or "svg").lower()
-
-        opts = QRRenderSettings(
-            size=int(settings.get("size", 512)),
-            color=str(settings.get("color", "#000000")),
-            background=str(settings.get("background", "#FFFFFF")),
-            error_correction=str(settings.get("error_correction", "H")),
-            border=int(settings.get("border", 4)),
-            format=requested_format,
+    def _generate_png_bytes(self, text: str, size: int = 512) -> bytes:
+        qr = qrcode.QRCode(
+            version=None,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=4,
         )
+        qr.add_data(text)
+        qr.make(fit=True)
 
-        if qr_type == "vcard":
-            img_bytes = self.render_qr_raster(payload, opts, fmt="PNG")
-            img_b64 = base64.b64encode(img_bytes).decode("ascii")
-            filename = f"qrwaver_{qr_type}_{datetime.now():%Y-%m-%dT%H-%M-%S}.png"
+        img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+        img = img.resize((size, size))
 
-            return {
-                "success": True,
-                "image": f"data:image/png;base64,{img_b64}",
-                "mime": "image/png",
-                "payload": payload,
-                "filename": filename,
-                "width": opts.size,
-                "height": opts.size,
-            }
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        return buf.getvalue()
 
-        fmt = requested_format
+    def _generate_jpg_bytes(self, text: str, size: int = 512) -> bytes:
+        qr = qrcode.QRCode(
+            version=None,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(text)
+        qr.make(fit=True)
 
-        # Raster (PNG / JPEG)
-        if fmt in ("png", "jpeg", "jpg"):
-            raster_fmt = "PNG" if fmt == "png" else "JPEG"
-            mime = "image/png" if fmt == "png" else "image/jpeg"
-            ext = "png" if fmt == "png" else "jpg"
+        img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+        img = img.resize((size, size))
 
-            img_bytes = self.render_qr_raster(payload, opts, fmt=raster_fmt)
-            img_b64 = base64.b64encode(img_bytes).decode("ascii")
-            filename = f"qrwaver_{qr_type}_{datetime.now():%Y-%m-%dT%H-%M-%S}.{ext}"
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG")
+        return buf.getvalue()
 
-            return {
-                "success": True,
-                "image": f"data:{mime};base64,{img_b64}",
-                "mime": mime,
-                "payload": payload,
-                "filename": filename,
-                "width": opts.size,
-                "height": opts.size,
-            }
+    # ------------------------------------------------
+    # MAIN API – генерира и качва в R2
+    # ------------------------------------------------
+    def create_and_upload_qr(
+        self,
+        user_id: int,
+        payload: str,
+        fmt: str = "svg",
+        size: int = 512,
+    ) -> Dict[str, Any]:
+        """
+        payload = вече построен текст (URL, WIFI:, VCARD, ...)
+        fmt = "svg" | "png" | "jpg"
+        """
 
-        # Default: SVG
-        svg = self.render_qr_svg(payload, opts)
-        svg_b64 = base64.b64encode(svg.encode("utf-8")).decode("ascii")
-        filename = f"qrwaver_{qr_type}_{datetime.now():%Y-%m-%dT%H-%M-%S}.svg"
+        fmt = (fmt or "svg").lower()
+
+        if fmt == "svg":
+            mime = "image/svg+xml"
+            ext = "svg"
+            qr_bytes = self._generate_svg_bytes(payload, size=size)
+            # upload_svg очаква string
+            url = R2Service.upload_svg(user_id, qr_bytes.decode("utf-8"))
+
+        elif fmt == "png":
+            mime = "image/png"
+            ext = "png"
+            qr_bytes = self._generate_png_bytes(payload, size=size)
+            url = R2Service.upload_image(user_id, qr_bytes, ext)
+
+        elif fmt in ("jpg", "jpeg"):
+            mime = "image/jpeg"
+            ext = "jpg"
+            qr_bytes = self._generate_jpg_bytes(payload, size=size)
+            url = R2Service.upload_image(user_id, qr_bytes, ext)
+
+        else:
+            raise ValueError("Unsupported format. Use svg, png, jpg.")
 
         return {
             "success": True,
-            "image": f"data:image/svg+xml;base64,{svg_b64}",
-            "mime": "image/svg+xml",
+            "url": url,
+            "mime": mime,
             "payload": payload,
-            "filename": filename,
-            "width": opts.size,
-            "height": opts.size,
+            "filename": url.rsplit("/", 1)[-1],
+            "width": size,
+            "height": size,
         }

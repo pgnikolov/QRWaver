@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from app.services.qr_service import QRService
 from app.services.rate_limiter import SimpleRateLimiter
+import base64
 import logging
 
 api_bp = Blueprint("api", __name__)
@@ -57,8 +58,42 @@ def generate_qr():
         # Extract settings (color, size, format, etc.)
         settings = payload.get("settings") or {}
 
-        # ----------------- Generate the QR -----------------
-        result = _qr.generate(qr_type, data, settings)
+        # ----------------- Generate the QR (data URI; no persistence) -----------------
+        # Build payload string first
+        text = _qr.build_payload(qr_type, data)
+
+        # Render according to requested format; default SVG
+        fmt = (settings.get("format") or "svg").lower()
+        size = int(settings.get("size") or 512)
+
+        if fmt == "svg":
+            svg_bytes = _qr._generate_svg_bytes(text, size=size)  # protected access used intentionally
+            image = "data:image/svg+xml;base64," + base64.b64encode(svg_bytes).decode("ascii")
+            mime = "image/svg+xml"
+        elif fmt == "png":
+            png_bytes = _qr._generate_png_bytes(text, size=size)
+            image = "data:image/png;base64," + base64.b64encode(png_bytes).decode("ascii")
+            mime = "image/png"
+        elif fmt in ("jpg", "jpeg"):
+            jpg_bytes = _qr._generate_jpg_bytes(text, size=size)
+            image = "data:image/jpeg;base64," + base64.b64encode(jpg_bytes).decode("ascii")
+            mime = "image/jpeg"
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Unsupported format. Use svg, png, jpg.",
+                "limit": _limiter.limit,
+                "remaining": remaining,
+                "window": _limiter.window,
+            }), 400
+
+        result = {
+            "success": True,
+            "image": image,
+            "mime": mime,
+            "width": size,
+            "height": size,
+        }
 
         # Добавяме rate-limit метаданни към JSON
         result["rate_limit"] = {

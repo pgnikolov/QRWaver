@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="dashboard-header">
+  <h1>My QR Codes</h1>
+  <button id="logout-btn" class="btn-secondary">Logout</button>
+</header>
+
+<section class="dashboard-body">
+  <div id="qr-list" class="qr-grid">
+    <!-- JS will inject cards -->
+  </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
