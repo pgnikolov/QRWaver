@@ -1,3 +1,9 @@
+"""Google One-Tap / ID token authentication endpoint.
+
+This route verifies a Google ID token sent from the client (e.g., One-Tap),
+creates or retrieves a matching user, and sets a JWT cookie on success.
+"""
+
 from flask import Blueprint, request, jsonify
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -10,6 +16,11 @@ google_auth = Blueprint("google_auth", __name__, url_prefix="/auth")
 
 @google_auth.post("/google")
 def google_login():
+    """Authenticate via Google ID token and issue an application JWT.
+
+    Request JSON must include `id_token`. On success, sets an HTTP-only JWT
+    cookie and returns basic account details.
+    """
     data = request.json
     token = data.get("id_token")
 

@@ -1,4 +1,11 @@
-# app/__init__.py
+"""Application factory and core backend setup for QRWaver.
+
+This module provides the primary Flask application factory used by the
+project, including configuration selection, extension initialization,
+blueprint registration, logging, error handlers, and a few utility
+endpoints such as health and version.
+"""
+
 from flask import Flask, jsonify
 from werkzeug.exceptions import HTTPException, NotFound
 from flask_cors import CORS
@@ -40,7 +47,7 @@ def create_app():
     CORS(app, supports_credentials=True)
 
     # -------------------------------
-    # Logging – единствено място
+    # Logging — single, centralized configuration
     # -------------------------------
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
@@ -60,7 +67,7 @@ def create_app():
     )
     logger.addHandler(file_handler)
 
-    # Console handler (important for render.com, docker & dev)
+    # Console handler (useful for Render, Docker, and local development)
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(
@@ -101,6 +108,11 @@ def create_app():
     # -------------------------------
     @app.errorhandler(NotFound)
     def handle_404(e: NotFound):
+        """Return a compact JSON 404 response and log at info level.
+
+        We intentionally avoid logging 404s as errors because they are expected
+        in various scenarios (e.g., missing favicon or probing by clients).
+        """
         # Do not log 404 as ERROR; it's expected sometimes (e.g., favicon)
         app.logger.info(f"404 Not Found: {getattr(e, 'description', 'Resource not found')}")
         return jsonify({
@@ -111,6 +123,11 @@ def create_app():
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(e: HTTPException):
+        """Handle Werkzeug HTTP exceptions with a JSON body.
+
+        Logs 4xx as warnings and 5xx as errors. Returns a consistent JSON
+        structure with the HTTP status code.
+        """
         # Generic HTTP exceptions (4xx/5xx with an HTTP code)
         level = app.logger.warning if 400 <= e.code < 500 else app.logger.error
         level(f"HTTP {e.code}: {e.description}")
@@ -125,6 +142,11 @@ def create_app():
     # -------------------------------
     @app.errorhandler(Exception)
     def handle_exception(e):
+        """Catch-all exception handler returning JSON 500.
+
+        Any uncaught exception will be logged with a stack trace, and the
+        client receives a generic 500 response without internal details.
+        """
         app.logger.exception(f"Unhandled exception: {e}")
         return jsonify({
             "success": False,
@@ -137,10 +159,12 @@ def create_app():
     # -------------------------------
     @app.route("/ping")
     def ping():
+        """Simple health endpoint used by uptime checks and tests."""
         return jsonify({"success": True, "status": "ok", "message": "QRWaver API online"})
 
     @app.route("/version")
     def version():
+        """Return static application version/build information."""
         return jsonify({
             "success": True,
             "version": "1.0.0",
@@ -150,6 +174,7 @@ def create_app():
     # Quiet favicon 404 noise if no static favicon is present
     @app.route('/favicon.ico')
     def favicon():
+        """Return 204 for favicon when no static icon is present."""
         # If you add a static favicon later, replace with send_from_directory
         return "", 204
 
@@ -158,9 +183,10 @@ def create_app():
     # ---------------------------------
     @app.get('/users/<int:user_id>/<path:filename>')
     def legacy_user_file(user_id: int, filename: str):
-        """
-        Redirect old local file paths to Cloudflare R2 public CDN to avoid 404s
-        and keep previously shared links working.
+        """Redirect legacy local file paths to the public CDN.
+
+        This keeps previously shared links working by issuing a 302 to the
+        configured Cloudflare R2 public base URL.
         """
         from flask import redirect
         base = (R2_PUBLIC_BASE_URL or '').rstrip('/')
@@ -172,7 +198,7 @@ def create_app():
         return redirect(target, code=302)
 
     # -------------------------------
-    # DEV: Auto-create tables
+    # Development helper: auto-create tables
     # -------------------------------
     from app.models.user import User
     from app.models.qr_code import QRCode

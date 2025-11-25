@@ -1,3 +1,11 @@
+"""Flask application factory for legacy/simple app entry point.
+
+This module defines a lightweight `create_app` used by some scripts and
+historic entry points. The primary, more feature‑complete factory lives in
+`app.__init__.py`. Both factories are safe to use, but the one in
+`app.__init__` includes logging, error handlers, and additional blueprints.
+"""
+
 from flask import Flask
 from app.routes.main_routes import main_bp
 from app.routes.qr_routes import qr_bp
@@ -20,7 +28,7 @@ def create_app():
 
     app.config.from_object(Config)
 
-    # Регистрираме всички blueprints
+    # Register all blueprints for the simple app setup
     app.register_blueprint(main_bp)
     app.register_blueprint(qr_bp)
     app.register_blueprint(api_bp, url_prefix="/api")

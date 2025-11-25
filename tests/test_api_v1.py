@@ -1,3 +1,10 @@
+"""Basic smoke tests for public API endpoints.
+
+These tests assume a locally running development server at 127.0.0.1:5000.
+They verify that the health and version endpoints respond as expected and that
+the legacy preview QR generator returns a valid SVG payload.
+"""
+
 import pytest
 import requests
 
@@ -47,7 +54,7 @@ def test_generate_text_qr():
     payload = {
         "type": "text",
         "data": "Hello from automated test!",
-        # форматът е по избор; за теста изрично казваме SVG
+        # The format is optional; for the test we explicitly request SVG
         "settings": {"size": 300, "color": "#2563EB", "format": "svg"},
     }
     r = requests.post(f"{BASE_URL}/api/generate", json=payload)

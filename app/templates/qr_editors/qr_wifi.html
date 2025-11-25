@@ -105,7 +105,7 @@
 
             initQRGenerator("wifi");
 
-            // кажи на генератора да регенерира при промяна
+            // Tell the generator to re-render when inputs change
             [ssid, pass].forEach(el => el.addEventListener("input", () => window.scheduleQRUpdate?.()));
             [enc, hid].forEach(el => el.addEventListener("change", () => window.scheduleQRUpdate?.()));
 

@@ -1,3 +1,10 @@
+"""QR generation and upload service.
+
+This module centralizes logic for building text payloads for various QR types,
+rendering QR codes in multiple formats (SVG/PNG/JPG), and uploading the
+resulting images to the configured object storage (Cloudflare R2).
+"""
+
 from __future__ import annotations
 
 import io
@@ -15,11 +22,11 @@ class QRRenderSettings:
 
 
 class QRService:
-    """
-    Централен QR service:
-    - build_payload(...) -> string (използва qr_types/*)
-    - генерира QR SVG/PNG/JPG
-    - качва в R2
+    """High-level QR service.
+
+    - `build_payload(...)` -> string (delegates to `qr_types/*` helpers)
+    - Generates QR images in SVG/PNG/JPG
+    - Uploads finished images to R2
     """
 
     # ------------------------------------------------
@@ -108,7 +115,7 @@ class QRService:
         return buf.getvalue()
 
     # ------------------------------------------------
-    # MAIN API – генерира и качва в R2
+    # MAIN API — generate and upload to R2
     # ------------------------------------------------
     def create_and_upload_qr(
         self,
@@ -117,9 +124,17 @@ class QRService:
         fmt: str = "svg",
         size: int = 512,
     ) -> Dict[str, Any]:
-        """
-        payload = вече построен текст (URL, WIFI:, VCARD, ...)
-        fmt = "svg" | "png" | "jpg"
+        """Create a QR image for a given payload and upload it.
+
+        Args:
+            user_id: Owner id, used for organizing storage paths.
+            payload: Already constructed text (e.g., URL, WIFI:, VCARD, ...).
+            fmt: One of "svg", "png", "jpg".
+            size: Output size in pixels (for raster formats) or nominal size.
+
+        Returns:
+            A dictionary with keys: `success`, `url`, `mime`, `payload`,
+            `filename`, `width`, `height`.
         """
 
         fmt = (fmt or "svg").lower()
@@ -128,7 +143,7 @@ class QRService:
             mime = "image/svg+xml"
             ext = "svg"
             qr_bytes = self._generate_svg_bytes(payload, size=size)
-            # upload_svg очаква string
+            # `upload_svg` expects a string
             url = R2Service.upload_svg(user_id, qr_bytes.decode("utf-8"))
 
         elif fmt == "png":

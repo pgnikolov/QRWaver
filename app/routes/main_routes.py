@@ -1,3 +1,9 @@
+"""Primary site pages and template context processors.
+
+Provides the public index/about pages, dashboard view, and context processors
+to inject the current year and authentication state into all templates.
+"""
+
 from flask import Blueprint, render_template
 from datetime import datetime, timezone
 
@@ -81,4 +87,9 @@ def about():
 @main_bp.get("/dashboard")
 @jwt_required(optional=True)
 def dashboard_page():
+    """Render the user dashboard page.
+
+    Authentication is optional here so the page can render a friendly prompt
+    for non-authenticated users while still functioning when logged in.
+    """
     return render_template("dashboard.html")

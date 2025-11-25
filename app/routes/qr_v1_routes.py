@@ -1,3 +1,10 @@
+"""Versioned QR API (v1).
+
+Endpoints for previewing, creating, listing, deleting QR codes, and fetching
+basic analytics. JWT authentication is required for all persisted operations;
+preview is rate-limited and unauthenticated.
+"""
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -195,6 +202,11 @@ def create_qr_v1():
 @qr_v1_bp.route("", methods=["GET"])
 @jwt_required()
 def list_qr_v1():
+    """List the authenticated user's saved QR codes.
+
+    Returns a list of items containing type, payload, public file URL, scan
+    counters, creation time, and (when available) a computed short link.
+    """
     user_id = get_jwt_identity()
     items = (
         QRCode.query

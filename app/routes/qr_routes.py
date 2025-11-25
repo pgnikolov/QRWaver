@@ -1,3 +1,9 @@
+"""Routes for QR editor pages.
+
+Renders the appropriate editor template based on the QR type in the URL.
+Performs basic normalization/validation of the type segment before rendering.
+"""
+
 from flask import Blueprint, render_template, abort
 
 qr_bp = Blueprint("qr", __name__, url_prefix="/qr")

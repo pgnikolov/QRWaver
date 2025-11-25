@@ -1,3 +1,10 @@
+"""Authentication routes: register, login/logout, and Google OAuth.
+
+This blueprint exposes JSON endpoints for email/password authentication and
+simple HTML views for the login and registration pages. It also provides a
+Google OAuth 2.0 sign-in flow that sets the JWT cookie upon success.
+"""
+
 from flask import Blueprint, request, jsonify, current_app, render_template
 from flask_jwt_extended import create_access_token, set_access_cookies, unset_jwt_cookies
 from app.schemas.user_schema import UserRegisterSchema, UserLoginSchema
@@ -13,6 +20,11 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 @auth_bp.post("/register")
 def register():
+    """Register a new user via JSON payload.
+
+    Body must match `UserRegisterSchema`. Returns 201 with the new `user_id`
+    on success, 409 if the email already exists, or 400 on validation errors.
+    """
     try:
         data = UserRegisterSchema(**request.json)
     except ValidationError as e:
@@ -28,6 +40,12 @@ def register():
 
 @auth_bp.post("/login")
 def login():
+    """Authenticate a user and set a JWT cookie.
+
+    Expects `UserLoginSchema` in the JSON body. Returns 200 on success with
+    an HTTP-only JWT cookie; 401 for invalid credentials; 400 for validation
+    errors.
+    """
     try:
         data = UserLoginSchema(**request.json)
     except ValidationError as e:
@@ -48,6 +66,7 @@ def login():
 
 @auth_bp.post("/logout")
 def logout():
+    """Clear the JWT cookies and return a success JSON response."""
     response = jsonify({"success": True, "message": "Logged out"})
     unset_jwt_cookies(response)
     return response, 200
@@ -141,9 +160,11 @@ def google_callback():
 
 @auth_bp.get("/login")
 def login_page():
+    """Render the login HTML page."""
     return render_template("auth/login.html")
 
 
 @auth_bp.get("/register")
 def register_page():
+    """Render the registration HTML page."""
     return render_template("auth/register.html")

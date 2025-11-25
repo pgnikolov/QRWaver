@@ -1,3 +1,10 @@
+"""Legacy unversioned QR generation API.
+
+Provides a simple `/api/generate` endpoint that returns a data-URI image for
+quick previews without persistence. Includes basic IP-based rate limiting and
+helper endpoints for ping/version.
+"""
+
 from flask import Blueprint, jsonify, request
 from app.services.qr_service import QRService
 from app.services.rate_limiter import SimpleRateLimiter
@@ -9,7 +16,7 @@ api_bp = Blueprint("api", __name__)
 # QR generator core
 _qr = QRService()
 
-# Rate limiter – 60 заявки / 60 секунди на IP (може да пипаме после)
+# Rate limiter — 60 requests / 60 seconds per IP (configurable)
 _limiter = SimpleRateLimiter(limit=60, window_seconds=60)
 
 logger = logging.getLogger(__name__)
@@ -23,7 +30,7 @@ def generate_qr():
     - Rate limiting per IP
     - Delegates QR building to QRService
     - Returns JSON with image data URI + basic metadata
-    - Връща реални rate-limit стойности в JSON и в HTTP headers
+    - Returns effective rate-limit values in JSON and HTTP headers
     """
     try:
         # ----------------- Rate limit check -----------------
@@ -37,7 +44,7 @@ def generate_qr():
                 "window": _limiter.window,
             })
             response.status_code = 429
-            # Стандартни rate-limit headers
+            # Standard rate-limit headers
             response.headers["X-RateLimit-Limit"] = str(_limiter.limit)
             response.headers["X-RateLimit-Remaining"] = "0"
             response.headers["X-RateLimit-Window"] = str(_limiter.window)
@@ -95,7 +102,7 @@ def generate_qr():
             "height": size,
         }
 
-        # Добавяме rate-limit метаданни към JSON
+        # Include rate-limit metadata in JSON
         result["rate_limit"] = {
             "limit": _limiter.limit,
             "remaining": remaining,
@@ -107,7 +114,7 @@ def generate_qr():
         response = jsonify(result)
         response.status_code = status
 
-        # И в HTTP headers – полезно за SaaS / dashboard / clients
+        # Also emit headers — useful for SaaS / dashboard / clients
         response.headers["X-RateLimit-Limit"] = str(_limiter.limit)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
         response.headers["X-RateLimit-Window"] = str(_limiter.window)
@@ -116,7 +123,7 @@ def generate_qr():
 
     except Exception as e:
         logger.exception(f"Error during QR generation: {e}")
-        # Не изнасяме raw exception към клиента
+        # Do not leak raw exception details to clients
         response = jsonify({"success": False, "error": "Internal server error"})
         response.status_code = 500
         return response
@@ -124,11 +131,13 @@ def generate_qr():
 
 @api_bp.route("/ping")
 def ping():
+    """Lightweight health check for the unversioned API namespace."""
     return jsonify({"success": True, "status": "ok"})
 
 
 @api_bp.route("/version")
 def version():
+    """Return static version info for the unversioned API namespace."""
     return jsonify({
         "success": True,
         "version": "1.0.0",

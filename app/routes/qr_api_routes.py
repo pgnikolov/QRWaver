@@ -1,3 +1,10 @@
+"""Unversioned authenticated QR API endpoints (legacy namespace).
+
+Includes endpoints to create a persisted QR for the current user and to list
+the user's existing QRs. Prefer using the versioned API under `/api/v1/qr`
+for new development.
+"""
+
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -11,6 +18,15 @@ qr_service = QRService()
 @qr_api.route("/create", methods=["POST"])
 @jwt_required()
 def create_qr():
+    """Create a QR and persist a record for the authenticated user.
+
+    Expects JSON with keys:
+    - `qr_type`: logical type (e.g., "text", "url"). Defaults to "text".
+    - `format`: rendering format ("svg" | "png" | "jpg"). Defaults to "svg".
+    - `payload`: the data to encode.
+
+    Returns a JSON object with `success`, the public `url`, and `record_id`.
+    """
     from app.models.qr_code import QRCode
 
     data = request.get_json() or {}
@@ -24,10 +40,10 @@ def create_qr():
         return jsonify({"success": False, "error": "Missing payload"}), 400
 
     try:
-        # 1) Генерираме payload от qr_type
+        # 1) Build a normalized payload string from qr_type
         payload_str = qr_service.build_payload(qr_type, input_payload)
 
-        # 2) Генерираме QR и качваме в R2
+        # 2) Render the QR and upload to R2
         result = qr_service.create_and_upload_qr(
             user_id=user_id,
             payload=payload_str,
@@ -35,7 +51,7 @@ def create_qr():
             size=512
         )
 
-        # 3) Запис в базата
+        # 3) Persist DB record
         qr_record = QRCode(
             user_id=user_id,
             qr_type=qr_type,
@@ -60,6 +76,7 @@ def create_qr():
 @qr_api.route("/list", methods=["GET"])
 @jwt_required()
 def list_qr_codes():
+    """List the authenticated user's QR codes with basic metadata."""
     user_id = get_jwt_identity()
 
     from app.models.qr_code import QRCode

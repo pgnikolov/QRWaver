@@ -1,8 +1,30 @@
+"""Database model for individual QR scan events.
+
+Each row represents a single request to a trackable short link, with optional
+networking and UTM metadata collected for analytics and reporting.
+"""
+
 from datetime import datetime, UTC
 from app.extensions.extensions import db
 
 
 class QRScan(db.Model):
+    """Per-scan analytics record.
+
+    Attributes:
+        id: Primary key.
+        qr_id: Foreign key to the associated `QRCode`.
+        ts: UTC timestamp for when the scan was recorded.
+        ip: IP address string (IPv4/IPv6) when available.
+        country/region/city: Optional geo data.
+        lat/lon: Optional approximate coordinates.
+        ua_raw: Full user-agent string as received.
+        device_type: Parsed device type such as "mobile", "desktop", etc.
+        os: Parsed operating system name/version when available.
+        browser: Parsed browser name/version when available.
+        referrer: Raw HTTP referrer value.
+        utm_*: Optional UTM campaign parameters.
+    """
     __tablename__ = "qr_scans"
 
     id = db.Column(db.Integer, primary_key=True)

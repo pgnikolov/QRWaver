@@ -1,4 +1,10 @@
-# app/config/settings.py
+"""Application configuration settings.
+
+Loads environment variables, defines constants for external services (e.g.,
+Cloudflare R2, Google OAuth), and exposes configuration classes for different
+environments (development/production).
+"""
+
 import os
 from dotenv import load_dotenv
 
@@ -35,6 +41,7 @@ GOOGLE_CLOCK_SKEW_SECONDS = int(os.getenv("GOOGLE_CLOCK_SKEW_SECONDS", "180") or
 
 
 class Config:
+    """Base configuration shared by all environments."""
     SECRET_KEY = os.getenv("SECRET_KEY", "dev_secret")
     DEBUG = os.getenv("DEBUG", "True").lower() in ("1", "true", "yes")
 
@@ -57,11 +64,13 @@ class Config:
 
 
 class DevelopmentConfig(Config):
+    """Development defaults: debug enabled and relaxed JWT settings."""
     ENV = "development"
     DEBUG = True
 
 
 class ProductionConfig(Config):
+    """Production defaults: debug disabled and stricter JWT settings."""
     ENV = "production"
     DEBUG = False
     # Harden cookies for production

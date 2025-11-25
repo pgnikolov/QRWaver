@@ -17,3 +17,9 @@ def register_blueprints(app):
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(qr_bp)
+
+"""Route blueprints package for QRWaver.
+
+This package contains Flask blueprints that implement the web UI pages and
+the JSON/REST API endpoints used by the application.
+"""

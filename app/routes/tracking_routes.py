@@ -1,3 +1,9 @@
+"""Routes responsible for handling trackable short links and redirects.
+
+The `/s/<slug>` endpoint records a scan and either redirects to the original
+URL (for URL-type QRs) or serves a minimal landing page for non-URL content.
+"""
+
 from flask import Blueprint, request, redirect, jsonify, make_response
 from app.models.qr_code import QRCode
 from app.services.analytics_service import AnalyticsService
@@ -72,6 +78,7 @@ def short_redirect(slug: str):
 
 
 def _escape_html(text: str) -> str:
+    """Minimal HTML escaping for inline landing content."""
     if text is None:
         return ""
     return (
