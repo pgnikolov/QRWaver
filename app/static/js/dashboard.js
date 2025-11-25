@@ -31,7 +31,7 @@ async function loadUserQRCodes() {
 
             row.innerHTML = `
                 <div class="qr-row-thumb">
-                    <img src="${qr.url}" alt="QR code" />
+                    <img src="${qr.url}" alt="QR code" loading="lazy" width="160" height="160" />
                 </div>
                 <div class="qr-row-body">
                     <div class="qr-row-header">

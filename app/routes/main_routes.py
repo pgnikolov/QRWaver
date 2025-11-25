@@ -11,6 +11,7 @@ from flask_jwt_extended import jwt_required
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 
 from app.routes.auth_routes import auth_bp
+from flask import current_app, request, Response, url_for
 
 main_bp = Blueprint("main", __name__)
 
@@ -84,6 +85,22 @@ def about():
     return render_template("about.html", title="About QRWeaver")
 
 
+@main_bp.route("/why")
+def why_page():
+    """Render the marketing page explaining "Why QRWaver?".
+
+    The page highlights core value propositions, how it works, use cases,
+    privacy/security notes, and an FAQ, with a clear call to action.
+    """
+    return render_template("why.html", title="Why QRWaver?")
+
+
+@main_bp.route("/docs")
+def docs_page():
+    """Render the documentation page with quickstart and API reference."""
+    return render_template("docs.html", title="QRWaver Docs")
+
+
 @main_bp.get("/dashboard")
 @jwt_required(optional=True)
 def dashboard_page():
@@ -93,3 +110,95 @@ def dashboard_page():
     for non-authenticated users while still functioning when logged in.
     """
     return render_template("dashboard.html")
+
+
+# ---------------------------------
+# SEO: robots.txt and sitemap.xml
+# ---------------------------------
+
+@main_bp.get("/robots.txt")
+def robots_txt():
+    """Serve robots.txt to guide crawlers.
+
+    Allows public marketing/docs pages and disallows private areas and APIs.
+    Adjust as needed when adding more public pages.
+    """
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /dashboard",
+        "Disallow: /auth/",
+        "Disallow: /api/",
+        # Short redirect endpoints are not useful to index; avoid bloat
+        "Disallow: /s/",
+        "Sitemap: {}".format(_public_base_url().rstrip("/") + "/sitemap.xml"),
+    ]
+    content = "\n".join(lines) + "\n"
+    return Response(content, mimetype="text/plain; charset=utf-8")
+
+
+def _public_base_url() -> str:
+    """Compute public base URL using config PUBLIC_BASE_URL or request host.
+
+    Mirrors logic from API routes: prefer config in production, otherwise host.
+    """
+    from app.config.settings import PUBLIC_BASE_URL
+
+    env = (current_app.config.get("ENV") or "").lower()
+    debug = bool(current_app.config.get("DEBUG"))
+    if env != "production" or debug:
+        return request.host_url.rstrip("/")
+
+    base = (PUBLIC_BASE_URL or "").strip()
+    if base and not (base.startswith("http://") or base.startswith("https://")):
+        base = "https://" + base
+    return (base or request.host_url).rstrip("/")
+
+
+@main_bp.get("/sitemap.xml")
+def sitemap_xml():
+    """Dynamic sitemap for core public pages.
+
+    Lists the primary marketing and docs pages. Extend to include more static
+    pages as needed. We do not include user dashboards or dynamic editor
+    instances.
+    """
+    base = _public_base_url()
+    pages = [
+        ("main.index", {}),
+        ("main.why_page", {}),
+        ("main.docs_page", {}),
+        ("main.about", {}),
+        # Editor landing pages (static marketing endpoints under /qr/<type>)
+        ("qr.qr_editor", {"qr_type": "url"}),
+        ("qr.qr_editor", {"qr_type": "wifi"}),
+        ("qr.qr_editor", {"qr_type": "vcard"}),
+        ("qr.qr_editor", {"qr_type": "text"}),
+        ("qr.qr_editor", {"qr_type": "email"}),
+        ("qr.qr_editor", {"qr_type": "phone"}),
+        ("qr.qr_editor", {"qr_type": "youtube"}),
+        ("qr.qr_editor", {"qr_type": "facebook"}),
+        ("qr.qr_editor", {"qr_type": "instagram"}),
+        ("qr.qr_editor", {"qr_type": "linkedin"}),
+        ("qr.qr_editor", {"qr_type": "tiktok"}),
+        ("qr.qr_editor", {"qr_type": "twitter"}),
+    ]
+
+    # Build XML
+    now_iso = datetime.now(timezone.utc).date().isoformat()
+    urlset = []
+    for endpoint, params in pages:
+        try:
+            path = url_for(endpoint, **params)
+        except Exception:
+            continue
+        loc = f"{base}{path}"
+        urlset.append(f"  <url><loc>{loc}</loc><lastmod>{now_iso}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>")
+
+    xml = (
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n"
+        + "\n".join(urlset)
+        + "\n</urlset>\n"
+    )
+    return Response(xml, mimetype="application/xml; charset=utf-8")

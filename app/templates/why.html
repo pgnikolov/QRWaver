@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Why QRWaver? — QRWaver{% endblock %}
+{% block meta_description %}
+  <meta name="description" content="Why choose QRWaver: create trackable QR codes with short links, reliable redirects, and simple analytics. URL, Wi‑Fi, vCard, and more."/>
+{% endblock %}
+{% block meta_og %}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="QRWaver">
+  <meta property="og:title" content="Why QRWaver? Create trackable QR codes in seconds">
+  <meta property="og:description" content="Branded, analytics‑ready QR codes with short links and reliable redirects. URL, Wi‑Fi, vCard, Text, and more.">
+  <meta property="og:url" content="{{ request.url if request else '' }}">
+  <meta property="og:image" content="{{ url_for('static', filename='images/branding/logo_wordmark.png', _external=True) }}">
+  <meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+{% block content %}
+
+<section class="container block page-hero">
+  <h1 class="page-title">Create trackable QR codes in seconds</h1>
+  <p class="page-subtitle">Branded, analytics-ready QR codes with short links and reliable redirects.</p>
+  <div class="hero-ctas">
+    <a class="btn" href="{{ url_for('qr.qr_editor', qr_type='url') }}">Create a QR</a>
+    <a class="btn-secondary" href="{{ url_for('main.docs_page') }}">See the docs</a>
+  </div>
+  <hr class="sep"/>
+</section>
+
+<section class="container block">
+  <h2 class="section-title">Why choose QRWaver</h2>
+  <div class="features-grid">
+    <article class="feature">
+      <h3>Trackable short links</h3>
+      <p>Every saved QR embeds a short link like <code>/s/&lt;slug&gt;</code>. Scans are counted and shown in your dashboard.</p>
+    </article>
+    <article class="feature">
+      <h3>Multiple QR types</h3>
+      <p>URL, Wi‑Fi, vCard, Text, Email, Phone, YouTube, and Social profiles — all supported.</p>
+    </article>
+    <article class="feature">
+      <h3>Reliable hosting</h3>
+      <p>QR images are stored on Cloudflare R2 and served via a public CDN for speed and durability.</p>
+    </article>
+    <article class="feature">
+      <h3>Simple analytics</h3>
+      <p>Privacy‑respecting metrics like scan counts, device type, basic geo (when available), and daily series.</p>
+    </article>
+    <article class="feature">
+      <h3>Secure authentication</h3>
+      <p>Email/password and Google sign‑in. JWT is stored in HTTP‑only cookies for security.</p>
+    </article>
+    <article class="feature">
+      <h3>Developer‑friendly</h3>
+      <p>Preview endpoint with rate limiting, clean JSON APIs, and clear error responses.</p>
+    </article>
+  </div>
+</section>
+
+<section class="container block">
+  <h2 class="section-title">How it works</h2>
+  <ol class="steps">
+    <li><strong>Choose</strong> a QR type and enter your data.</li>
+    <li><strong>Save</strong> to generate an image that contains a trackable short link.</li>
+    <li><strong>Share</strong> your QR and watch scans appear in your dashboard.</li>
+  </ol>
+</section>
+
+<section class="container block">
+  <h2 class="section-title">Use cases</h2>
+  <div class="usecases-grid">
+    <div>
+      <h3>Businesses</h3>
+      <p>Menus, flyers, storefront windows, product inserts.</p>
+    </div>
+    <div>
+      <h3>Creators</h3>
+      <p>Link to social profiles, YouTube channels, or a link-in-bio page.</p>
+    </div>
+    <div>
+      <h3>Events</h3>
+      <p>Wi‑Fi cards, check‑in links, program handouts.</p>
+    </div>
+    <div>
+      <h3>Personal</h3>
+      <p>Contact vCards, quick text notes, email or phone actions.</p>
+    </div>
+  </div>
+</section>
+
+<section class="container block">
+  <h2 class="section-title">Privacy & security</h2>
+  <ul class="bullets">
+    <li>Scans log IP, user‑agent, referrer, and basic geo when available.</li>
+    <li>Auth uses HTTP‑only cookies; no tokens exposed to JavaScript.</li>
+    <li>Preview endpoints are rate‑limited to prevent abuse.</li>
+  </ul>
+</section>
+
+<section class="container block">
+  <h2 class="section-title">FAQ</h2>
+  <details class="faq"><summary>Do scans work on localhost?</summary>
+    <p>If the QR encodes <code>127.0.0.1</code>, only that device can reach it. For phones on your network, use your computer’s LAN IP or a tunnel; in production, use your public domain.</p>
+  </details>
+  <details class="faq"><summary>Can I delete QRs? What happens to files?</summary>
+    <p>Deleting removes the record and invalidates the short link. The underlying file isn’t deleted from storage in the current version.</p>
+  </details>
+  <details class="faq"><summary>What if a QR points to an old domain?</summary>
+    <p>Regenerate a new QR after changing the base URL/domain so scans reach the correct server.</p>
+  </details>
+  <details class="faq"><summary>How accurate are analytics?</summary>
+    <p>We log per request to <code>/s/&lt;slug&gt;</code>. Some scanners prefetch; counts generally map 1:1 with real opens.</p>
+  </details>
+  <details class="faq"><summary>Can I customize frames and colors?</summary>
+    <p>Frames are available in the editor; more customization options are on the roadmap.</p>
+  </details>
+</section>
+
+{# Structured data: FAQPage JSON-LD mirroring the visible FAQ items #}
+{% block scripts %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do scans work on localhost?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "If the QR encodes 127.0.0.1, only that device can reach it. Use your computer’s LAN IP or a tunnel in development; in production, use your public domain."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I delete QRs? What happens to files?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Deleting removes the record and invalidates the short link. The underlying file isn’t deleted from storage in the current version."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What if a QR points to an old domain?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Regenerate a new QR after changing the base URL/domain so scans reach the correct server."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How accurate are analytics?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We log per request to /s/<slug>. Some scanners prefetch; counts generally map 1:1 with real opens."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I customize frames and colors?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Frames are available in the editor; more customization options are on the roadmap."
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+<section class="container block cta">
+  <a class="btn" href="{{ url_for('qr.qr_editor', qr_type='url') }}">Generate your first trackable QR</a>
+  <p class="muted">It takes under a minute.</p>
+  </section>
+
+{% endblock %}

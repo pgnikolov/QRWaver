@@ -4,6 +4,28 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>{% block title %}QRWaver — Create stylish QR codes{% endblock %}</title>
+    {% block meta_description %}
+    <meta name="description" content="Generate trackable QR codes with analytics. Create URL, Wi‑Fi, vCard, and more in seconds with QRWaver."/>
+    {% endblock %}
+
+    {# Canonical URL (override per page if needed) #}
+    {% block canonical %}
+    <link rel="canonical" href="{{ (request.url_root.rstrip('/') if request else '') }}{{ request.path if request else '' }}"/>
+    {% endblock %}
+
+    {# OpenGraph / Twitter defaults (pages can override via meta_og block) #}
+    {% block meta_og %}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="QRWaver">
+    <meta property="og:title" content="QRWaver — Create stylish QR codes">
+    <meta property="og:description" content="Generate trackable QR codes with short links and analytics.">
+    <meta property="og:url" content="{{ request.url if request else '' }}">
+    <meta property="og:image" content="{{ url_for('static', filename='images/branding/logo_wordmark.png', _external=True) }}">
+    <meta name="twitter:card" content="summary_large_image">
+    {% endblock %}
+
+    {# Extra per-page head tags (e.g., noindex) #}
+    {% block meta_extra %}{% endblock %}
 
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,8 +45,8 @@
     <nav class="main-nav">
       <ul>
         <li><a href="{{ url_for('main.index') }}">QR Codes</a></li>
-        <li><a href="#">Why QRWaver?</a></li>
-        <li><a href="#">Docs</a></li>
+        <li><a href="{{ url_for('main.why_page') }}">Why QRWaver?</a></li>
+        <li><a href="{{ url_for('main.docs_page') }}">Docs</a></li>
 
         <!-- LOGIN / REGISTER / DASHBOARD / LOGOUT -->
         {% if not is_authenticated %}

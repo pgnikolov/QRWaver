@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Docs — QRWaver{% endblock %}
+{% block meta_description %}
+  <meta name="description" content="QRWaver documentation: quickstart, authentication, API reference, examples, rate limits, and environment setup."/>
+{% endblock %}
+{% block meta_og %}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="QRWaver">
+  <meta property="og:title" content="QRWaver Documentation">
+  <meta property="og:description" content="Quickstart, authentication, API reference, and examples to integrate QRWaver.">
+  <meta property="og:url" content="{{ request.url if request else '' }}">
+  <meta property="og:image" content="{{ url_for('static', filename='images/branding/logo_wordmark.png', _external=True) }}">
+  <meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+{% block content %}
+
+<section class="container block page-hero">
+  <h1 class="page-title">QRWaver Documentation</h1>
+  <p class="page-subtitle">Quickstart, authentication, API reference, examples, and environment tips.</p>
+  <hr class="sep"/>
+</section>
+
+<section class="container block">
+  <h2 id="overview" class="section-title">Overview</h2>
+  <p>
+    QRWaver is a Flask-based app that generates trackable QR codes and hosts the images on Cloudflare R2.
+    Saved QRs embed a short link (<code>/s/&lt;slug&gt;</code>) so each scan is counted and shown on your dashboard.
+  </p>
+  <ul class="bullets">
+    <li>Backend: Flask + SQLAlchemy; Auth: JWT in HTTP-only cookies</li>
+    <li>Storage/CDN: Cloudflare R2 (public base via <code>R2_PUBLIC_BASE_URL</code>)</li>
+    <li>Short links: base URL is dynamic in dev (host-based), or uses <code>PUBLIC_BASE_URL</code> in production</li>
+  </ul>
+</section>
+
+<section class="container block">
+  <h2 id="quickstart" class="section-title">Quickstart</h2>
+  <h3>1) Authenticate</h3>
+  <p>Email/password login sets a JWT cookie:</p>
+  <pre><code>curl -i -X POST https://your-domain/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"Passw0rd!"}'
+# On success, an HTTP-only JWT cookie is set.</code></pre>
+
+  <h3>2) Create a trackable URL QR</h3>
+  <pre><code>curl -i -X POST https://your-domain/api/v1/qr/create \
+  -H "Content-Type: application/json" \
+  -b "cookie-from-login" \
+  -d '{
+    "type": "url",
+    "data": "https://example.com",
+    "settings": {"format": "svg", "size": 512}
+  }'</code></pre>
+
+  <h3>3) List your QRs</h3>
+  <pre><code>curl -s -X GET https://your-domain/api/v1/qr -b "cookie-from-login"</code></pre>
+
+  <h3>4) Simulate a scan</h3>
+  <p>Open the returned <code>short_url</code> (e.g., <code>https://your-domain/s/&lt;slug&gt;</code>). For URL QRs, you'll get a 302 redirect to your target, and the scan counter increases.</p>
+</section>
+
+<section class="container block">
+  <h2 id="auth" class="section-title">Authentication details</h2>
+  <ul class="bullets">
+    <li>JWT is set in an HTTP-only cookie; for browser fetch, use <code>credentials: "include"</code>.</li>
+    <li>CORS is enabled with credentials; ensure your frontend and API share the proper domain settings.</li>
+    <li>Google login endpoints are available for OAuth/One‑Tap flows.</li>
+  </ul>
+  <pre><code class="language-js">const res = await fetch("/api/v1/qr", { credentials: "include" });
+const json = await res.json();</code></pre>
+</section>
+
+<section class="container block">
+  <h2 id="rate-limits" class="section-title">Rate limits</h2>
+  <ul class="bullets">
+    <li><code>POST /api/v1/qr/preview</code>: default 120 requests/min per IP.</li>
+    <li><code>POST /api/generate</code> (legacy preview): default 60 requests/min per IP.</li>
+  </ul>
+</section>
+
+<section class="container block">
+  <h2 id="api" class="section-title">API reference</h2>
+  <h3>Public</h3>
+  <ul class="bullets">
+    <li><code>GET /ping</code> → <code>{ success, status }</code></li>
+    <li><code>GET /version</code> → <code>{ success, version, build }</code></li>
+    <li><code>GET /s/&lt;slug&gt;</code>: records a scan; 302 to the target for URL QRs; renders a minimal page for non‑URL.</li>
+  </ul>
+  <h3>Preview (no auth)</h3>
+  <ul class="bullets">
+    <li><code>POST /api/v1/qr/preview</code>: body <code>{ type, data, settings }</code> → data‑URI SVG</li>
+    <li><code>POST /api/generate</code> (legacy): similar interface; returns data‑URI in chosen format.</li>
+  </ul>
+  <h3>v1 QR API (auth)</h3>
+  <ul class="bullets">
+    <li><code>POST /api/v1/qr/create</code> → persist QR; returns image URL and <code>short_url</code></li>
+    <li><code>GET /api/v1/qr</code> → list QRs with <code>scan_count</code></li>
+    <li><code>GET /api/v1/qr/&lt;id&gt;/stats</code> → totals, daily series, simple breakdowns</li>
+    <li><code>DELETE /api/v1/qr/&lt;id&gt;</code> → remove QR (DB only)</li>
+  </ul>
+</section>
+
+<section class="container block">
+  <h2 id="errors" class="section-title">Error handling</h2>
+  <ul class="bullets">
+    <li>Standard JSON: <code>{ success: false, error: string, code? }</code></li>
+    <li><code>/s/&lt;slug&gt;</code> can return 404 if the slug was created in a different environment.</li>
+  </ul>
+</section>
+
+<section class="container block">
+  <h2 id="env" class="section-title">Environment variables</h2>
+  <ul class="bullets">
+    <li><code>PUBLIC_BASE_URL</code>: base for short links in production.</li>
+    <li><code>R2_PUBLIC_BASE_URL</code>: public CDN base for R2‑hosted files.</li>
+    <li>Cloudflare R2 credentials; Google OAuth client id/secret; JWT and Flask config values.</li>
+  </ul>
+</section>
+
+<section class="container block">
+  <h2 id="limits" class="section-title">Limits & roadmap</h2>
+  <ul class="bullets">
+    <li>Current free plan limit example: up to 5 saved QRs per user (enforced in v1 create endpoint).</li>
+    <li>Planned: richer theming, better landing pages for non‑URL QRs, optional asset cleanup on delete.</li>
+  </ul>
+</section>
+
+{% endblock %}
