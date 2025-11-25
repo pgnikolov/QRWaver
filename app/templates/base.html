@@ -26,10 +26,12 @@
         <li><a href="#">Why QRWaver?</a></li>
         <li><a href="#">Docs</a></li>
 
-        <!-- LOGIN / REGISTER / DASHBOARD -->
+        <!-- LOGIN / REGISTER / DASHBOARD / LOGOUT -->
         {% if not is_authenticated %}
         <li><a href="{{ url_for('auth.login_page') }}">Login</a></li>
         <li><a href="{{ url_for('auth.register_page') }}">Register</a></li>
+        {% else %}
+        <li><button id="logout-btn" class="btn btn-secondary" style="margin-right: .5rem;">Logout</button></li>
         {% endif %}
         <li><a href="{{ url_for('main.dashboard_page') }}" class="btn">Dashboard</a></li>
       </ul>

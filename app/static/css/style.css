@@ -825,3 +825,95 @@ h2 {
     background: #2d8cf0;
     color: white;
 }
+
+/* Dashboard rows layout */
+.qr-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  margin-bottom: 12px;
+}
+
+.qr-row-thumb {
+  flex: 0 0 128px;
+  max-width: 128px;
+}
+
+.qr-row-thumb img {
+  width: 128px;
+  height: 128px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+}
+
+.qr-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.qr-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.qr-row .qr-type {
+  font-weight: 600;
+  color: #111827;
+}
+
+.qr-row .qr-scans {
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.qr-row .qr-payload {
+  margin: 4px 0 8px 0;
+  color: #1f2937;
+  /* Keep long URLs on one line with ellipsis */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qr-row .qr-meta {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin: 2px 0;
+}
+
+/* Truncate long links inside meta rows (e.g., Short link:) */
+.qr-row .qr-meta a {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+
+.qr-row-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .qr-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .qr-row-thumb,
+  .qr-row-thumb img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+}

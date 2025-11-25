@@ -22,47 +22,32 @@ async function loadUserQRCodes() {
         listEl.innerHTML = "";
 
         items.forEach(qr => {
-            const shareUrl = qr.short_url || qr.url;
-            const card = document.createElement("article");
-            card.className = "qr-card";
+            const row = document.createElement("article");
+            row.className = "qr-row";
 
             const created = qr.created_at
                 ? new Date(qr.created_at).toLocaleString()
                 : "";
 
-            card.innerHTML = `
-                <div class="qr-card-thumb">
+            row.innerHTML = `
+                <div class="qr-row-thumb">
                     <img src="${qr.url}" alt="QR code" />
                 </div>
-                <div class="qr-card-body">
-                    <p class="qr-type">${qr.qr_type.toUpperCase()}</p>
-                    <p class="qr-payload">${escapeHtml(shorten(qr.payload, 120))}</p>
-                    <p class="qr-meta">
-                        Created: ${created}<br>
-                        Scans: ${qr.scan_count}
-                    </p>
-                    <div class="qr-card-actions">
+                <div class="qr-row-body">
+                    <div class="qr-row-header">
+                        <span class="qr-type">${qr.qr_type.toUpperCase()}</span>
+                        <span class="qr-scans">Scans: ${qr.scan_count}</span>
+                    </div>
+                    <p class="qr-payload" title="${escapeHtml(qr.payload)}">${escapeHtml(shorten(qr.payload, 160))}</p>
+                    <p class="qr-meta">Created: ${created}</p>
+                    <div class="qr-row-actions">
                         <a href="${qr.url}" target="_blank" class="btn-secondary">Open</a>
-                        <button class="btn-primary" data-url="${shareUrl}">Copy share link</button>
                         <button class="btn-danger" data-delete-id="${qr.id}">Delete</button>
                     </div>
-                    ${qr.short_url ? `<p class="qr-meta">Short link: <a href="${qr.short_url}" target="_blank">${qr.short_url}</a></p>` : ""}
                 </div>
             `;
 
-            const copyBtn = card.querySelector("button[data-url]");
-            copyBtn.addEventListener("click", async () => {
-                try {
-                    const toCopy = copyBtn.getAttribute("data-url") || qr.url;
-                    await navigator.clipboard.writeText(toCopy);
-                    copyBtn.textContent = "Copied!";
-                    setTimeout(() => (copyBtn.textContent = "Copy share link"), 1500);
-                } catch {
-                    alert("Cannot copy link.");
-                }
-            });
-
-            const deleteBtn = card.querySelector("button[data-delete-id]");
+            const deleteBtn = row.querySelector("button[data-delete-id]");
             deleteBtn.addEventListener("click", async () => {
                 if (!confirm("Delete this QR from your dashboard? This will remove stats and the short link, but will not delete the file from storage.")) return;
                 try {
@@ -76,8 +61,8 @@ async function loadUserQRCodes() {
                     }
                     const out = await delRes.json();
                     if (!out.success) throw new Error(out.error || "Delete failed");
-                    card.remove();
-                    if (!listEl.querySelector('.qr-card')) {
+                    row.remove();
+                    if (!listEl.querySelector('.qr-row')) {
                         listEl.innerHTML = "<p>You don't have any QR codes yet.</p>";
                     }
                 } catch (e) {
@@ -86,7 +71,7 @@ async function loadUserQRCodes() {
                 }
             });
 
-            listEl.appendChild(card);
+            listEl.appendChild(row);
         });
 
     } catch (err) {

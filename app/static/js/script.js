@@ -403,3 +403,32 @@ function initQRGenerator(type = "text") {
     // ---------------------------------------------------------------------
     updateQR();
 }
+
+// Global site JS
+document.addEventListener("DOMContentLoaded", () => {
+  const logoutBtn = document.getElementById("logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        logoutBtn.disabled = true;
+        logoutBtn.textContent = "Logging out...";
+        const res = await fetch("/auth/logout", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+        // Regardless of JSON body, if 200, redirect to home
+        if (res.ok) {
+          window.location.href = "/";
+          return;
+        }
+      } catch (e) {
+        console.error("Logout failed", e);
+      } finally {
+        logoutBtn.disabled = false;
+        logoutBtn.textContent = "Logout";
+      }
+      alert("Could not log out. Please try again.");
+    });
+  }
+});
