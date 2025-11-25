@@ -22,6 +22,7 @@ async function loadUserQRCodes() {
         listEl.innerHTML = "";
 
         items.forEach(qr => {
+            const shareUrl = qr.short_url || qr.url;
             const card = document.createElement("article");
             card.className = "qr-card";
 
@@ -42,18 +43,20 @@ async function loadUserQRCodes() {
                     </p>
                     <div class="qr-card-actions">
                         <a href="${qr.url}" target="_blank" class="btn-secondary">Open</a>
-                        <button class="btn-primary" data-url="${qr.url}">Copy link</button>
+                        <button class="btn-primary" data-url="${shareUrl}">Copy share link</button>
                         <button class="btn-danger" data-delete-id="${qr.id}">Delete</button>
                     </div>
+                    ${qr.short_url ? `<p class="qr-meta">Short link: <a href="${qr.short_url}" target="_blank">${qr.short_url}</a></p>` : ""}
                 </div>
             `;
 
             const copyBtn = card.querySelector("button[data-url]");
             copyBtn.addEventListener("click", async () => {
                 try {
-                    await navigator.clipboard.writeText(qr.url);
+                    const toCopy = copyBtn.getAttribute("data-url") || qr.url;
+                    await navigator.clipboard.writeText(toCopy);
                     copyBtn.textContent = "Copied!";
-                    setTimeout(() => (copyBtn.textContent = "Copy link"), 1500);
+                    setTimeout(() => (copyBtn.textContent = "Copy share link"), 1500);
                 } catch {
                     alert("Cannot copy link.");
                 }

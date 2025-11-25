@@ -7,6 +7,7 @@ from app.models.qr_code import QRCode
 from app.services.rate_limiter import SimpleRateLimiter
 from app.services.analytics_service import AnalyticsService
 from sqlalchemy import func
+from app.config.settings import PUBLIC_BASE_URL
 
 
 qr_v1_bp = Blueprint("qr_v1", __name__, url_prefix="/api/v1/qr")
@@ -109,38 +110,75 @@ def create_qr_v1():
 
     try:
         # Build QR payload text from the given type+data
-        payload_text = qr_service.build_payload(qr_type, data)
+        original_payload_text = qr_service.build_payload(qr_type, data)
 
         # Extract rendering format/size
         fmt = (settings.get("format") or "svg").lower()
         size = int(settings.get("size") or 512)
 
-        # Render + upload to storage (R2)
+        # Generate short slug for tracking (analytics) first so we can
+        # encode the trackable URL inside the QR image itself.
+        slug = analytics.generate_slug()
+
+        # Build short URL using a public base if configured; fall back to request.host
+        def _base_url() -> str:
+            """
+            Decide which base URL to embed inside the QR image.
+
+            Rationale:
+            - In development we must use the current request host (localhost) so
+              that the generated short URL points back to the dev server where
+              the slug is stored (SQLite dev DB). If we were to always use the
+              PUBLIC_BASE_URL from the .env, scans would hit the production
+              domain which doesn't have the dev slug, resulting in
+              {"success": False, "error": "Not found"}.
+            - In production, prefer PUBLIC_BASE_URL when provided; otherwise
+              fall back to the request host.
+            """
+            from flask import current_app as app
+
+            # Prefer dynamic host in non-production environments
+            env = (app.config.get("ENV") or "").lower()
+            debug = bool(app.config.get("DEBUG"))
+            if env != "production" or debug:
+                return request.host_url.rstrip("/")
+
+            # Production: use configured public base if available
+            base = (PUBLIC_BASE_URL or "").strip()
+            if base:
+                if not (base.startswith("http://") or base.startswith("https://")):
+                    base = "https://" + base
+                return base.rstrip("/")
+
+            # Fallback
+            return request.host_url.rstrip("/")
+
+        base = _base_url()
+        short_url = f"{base}/s/{slug}"
+
+        # If trackable, we want the QR code image to contain the short URL
+        # so that every real-world scan hits our /s/<slug> endpoint and is counted.
+        qr_content = short_url
+
+        # Render + upload the QR that contains the short URL
         result = qr_service.create_and_upload_qr(
             user_id=user_id,
-            payload=payload_text,
+            payload=qr_content,
             fmt=fmt,
             size=size,
         )
 
-        # Generate short slug for tracking (analytics)
-        slug = analytics.generate_slug()
-
-        # Persist DB record (store full URL for easier consumption)
+        # Persist DB record: store the ORIGINAL payload for reference/redirects
         record = QRCode(
             user_id=user_id,
             qr_type=qr_type,
-            payload=payload_text,
+            payload=original_payload_text,
             file_path=result["url"],
             slug=slug,
             is_trackable=True,
         )
         db.session.add(record)
         db.session.commit()
-
-        # Build short URL (host-aware)
-        base = request.host_url.rstrip("/")
-        short_url = f"{base}/s/{record.slug}" if record.slug else None
 
         return jsonify({
             "success": True,
@@ -166,7 +204,30 @@ def list_qr_v1():
     )
 
     resp = []
+    # helper to compute public base URL consistently with create endpoint
+    def _base_url() -> str:
+        """
+        Same base URL decision logic as in create_qr_v1(). See rationale there.
+        """
+        from flask import current_app as app
+
+        env = (app.config.get("ENV") or "").lower()
+        debug = bool(app.config.get("DEBUG"))
+        if env != "production" or debug:
+            return request.host_url.rstrip("/")
+
+        base = (PUBLIC_BASE_URL or "").strip()
+        if base:
+            if not (base.startswith("http://") or base.startswith("https://")):
+                base = "https://" + base
+            return base.rstrip("/")
+        return request.host_url.rstrip("/")
+    base = _base_url()
     for qr in items:
+        # Build short URL if slug is present
+        short_url = None
+        if qr.slug:
+            short_url = f"{base}/s/{qr.slug}"
         resp.append({
             "id": qr.id,
             "qr_type": qr.qr_type,
@@ -174,6 +235,9 @@ def list_qr_v1():
             "url": qr.file_path,  # we store the full URL here in v1
             "scan_count": qr.scan_count,
             "created_at": qr.created_at.isoformat() if qr.created_at else None,
+            "slug": qr.slug,
+            "short_url": short_url,
+            "is_trackable": bool(qr.is_trackable),
         })
 
     return jsonify({"success": True, "items": resp}), 200

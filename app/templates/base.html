@@ -27,8 +27,10 @@
         <li><a href="#">Docs</a></li>
 
         <!-- LOGIN / REGISTER / DASHBOARD -->
+        {% if not is_authenticated %}
         <li><a href="{{ url_for('auth.login_page') }}">Login</a></li>
         <li><a href="{{ url_for('auth.register_page') }}">Register</a></li>
+        {% endif %}
         <li><a href="{{ url_for('main.dashboard_page') }}" class="btn">Dashboard</a></li>
       </ul>
     </nav>

@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
-from app.config.settings import GOOGLE_CLIENT_ID
+from app.config.settings import GOOGLE_CLIENT_ID, GOOGLE_CLOCK_SKEW_SECONDS
 from app.services.user_service import UserService
 from flask_jwt_extended import create_access_token, set_access_cookies
 
@@ -22,7 +22,8 @@ def google_login():
             token,
             requests.Request(),
             GOOGLE_CLIENT_ID,
-            clock_skew_in_seconds=60  # tolerate small time drift
+            # Tolerate clock drift between client and server
+            clock_skew_in_seconds=GOOGLE_CLOCK_SKEW_SECONDS
         )
 
         email = idinfo["email"]

@@ -22,13 +22,18 @@ def short_redirect(slug: str):
     if not qr:
         return jsonify({"success": False, "error": "Not found"}), 404
 
-    if qr.is_trackable:
+    # Treat None as trackable (backward compatibility for old rows without explicit True)
+    if qr.is_trackable is not False:
         enriched = analytics.enrich_request(request)
         try:
             analytics.log_scan(qr, enriched)
-        except Exception:
-            # Do not block redirect on analytics failure
-            pass
+        except Exception as e:
+            # Do not block redirect on analytics failure, but log for diagnostics
+            try:
+                from flask import current_app as app
+                app.logger.error(f"analytics.log_scan failed for QR id={qr.id}, slug={slug}: {e}")
+            except Exception:
+                pass
 
     # Redirect only for URL payloads; otherwise render minimal landing
     if (qr.qr_type or "").lower() == "url":

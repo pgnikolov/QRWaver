@@ -2,6 +2,7 @@ from flask import Blueprint, render_template
 from datetime import datetime, timezone
 
 from flask_jwt_extended import jwt_required
+from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 
 from app.routes.auth_routes import auth_bp
 
@@ -22,6 +23,30 @@ def inject_now():
     :rtype: dict
     """
     return {'current_year': datetime.now(timezone.utc).year}
+
+
+@main_bp.app_context_processor
+def inject_auth_state():
+    """
+    Injects simple authentication state flags into all templates.
+
+    Sets:
+    - ``is_authenticated``: True if a valid JWT cookie is present, else False.
+    - ``current_user_id``: The user id from JWT when available, else None.
+    """
+    try:
+        # Will not raise if no token; makes the check lightweight for public pages
+        verify_jwt_in_request(optional=True)
+        identity = get_jwt_identity()
+        return {
+            'is_authenticated': bool(identity),
+            'current_user_id': identity if identity else None,
+        }
+    except Exception:
+        return {
+            'is_authenticated': False,
+            'current_user_id': None,
+        }
 
 @main_bp.route("/")
 def index():

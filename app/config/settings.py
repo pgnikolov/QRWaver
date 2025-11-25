@@ -19,11 +19,19 @@ R2_ENDPOINT_URL = os.getenv("R2_ENDPOINT_URL")
 R2_PUBLIC_BASE_URL = os.getenv("R2_PUBLIC_BASE_URL", "").rstrip("/")
 
 # ---------------------------------------
+# Public base URL for short links
+# ---------------------------------------
+# If set, this will be used as the base for trackable short URLs embedded in QR codes,
+# e.g. https://yourdomain.com/s/<slug>. If not set, we fall back to request.host_url.
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip()
+
+# ---------------------------------------
 # Google OAuth
 # ---------------------------------------
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
+GOOGLE_CLOCK_SKEW_SECONDS = int(os.getenv("GOOGLE_CLOCK_SKEW_SECONDS", "180") or 180)
 
 
 class Config:
