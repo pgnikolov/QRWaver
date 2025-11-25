@@ -839,14 +839,19 @@ h2 {
 }
 
 .qr-row-thumb {
-  flex: 0 0 128px;
-  max-width: 128px;
+  /* Fixed thumbnail slot so every QR appears the same visual size */
+  flex: 0 0 160px;
+  max-width: 160px;
+  width: 160px;
 }
 
 .qr-row-thumb img {
-  width: 128px;
-  height: 128px;
+  /* Force a square, uniform thumb regardless of source image/SVG size */
+  width: 160px !important;
+  height: 160px !important;
+  aspect-ratio: 1 / 1;
   object-fit: contain;
+  display: block;
   border-radius: 8px;
   background: #f9fafb;
   border: 1px solid #f3f4f6;
@@ -912,8 +917,8 @@ h2 {
   }
   .qr-row-thumb,
   .qr-row-thumb img {
-    width: 100%;
-    max-width: 100%;
-    height: auto;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
   }
 }
