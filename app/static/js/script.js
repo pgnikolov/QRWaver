@@ -9,6 +9,37 @@ document.addEventListener('click', e => {
 });
 
 // ---------------------------------------------------------------------
+// Mobile navigation toggle
+// ---------------------------------------------------------------------
+(function(){
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggle = document.getElementById('mobile-menu-toggle');
+        const nav = document.getElementById('primary-nav');
+        if (!toggle || !nav) return;
+
+        const closeOnOutside = (ev) => {
+            if (!nav.classList.contains('open')) return;
+            if (ev.target.closest('#primary-nav') || ev.target.closest('#mobile-menu-toggle')) return;
+            nav.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        };
+
+        toggle.addEventListener('click', () => {
+            const isOpen = nav.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        document.addEventListener('click', closeOnOutside);
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 960 && nav.classList.contains('open')) {
+                nav.classList.remove('open');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    });
+})();
+
+// ---------------------------------------------------------------------
 // UNIVERSAL QR GENERATOR – talks to /api/qr/create (JWT COOKIE REQUIRED)
 // ---------------------------------------------------------------------
 
