@@ -621,6 +621,37 @@ h2 {
     background-color: #1E40AF;
 }
 
+/* --- Global button styles (usable anywhere, e.g., /why page) --- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color .15s ease, box-shadow .15s ease, transform .05s ease;
+}
+
+.btn-primary {
+    background-color: #2563EB;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .25);
+}
+.btn-primary:hover { background-color: #1E40AF; box-shadow: 0 6px 16px rgba(30, 64, 175, .28); }
+.btn-primary:active { transform: translateY(1px); }
+.btn-primary:focus-visible { outline: 2px solid #1E40AF; outline-offset: 2px; }
+
+/* CTA group on /why page */
+.hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+@media (max-width: 640px) {
+    .hero-ctas { gap: 10px; }
+    .hero-ctas .btn { flex: 1 1 auto; }
+}
+
 /* MAIN */
 .main-content {
     max-width: 1000px;

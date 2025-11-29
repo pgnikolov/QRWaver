@@ -18,8 +18,8 @@
   <h1 class="page-title">Create trackable QR codes in seconds</h1>
   <p class="page-subtitle">Branded, analytics-ready QR codes with short links and reliable redirects.</p>
   <div class="hero-ctas">
-    <a class="btn" href="{{ url_for('qr.qr_editor', qr_type='url') }}">Create a QR</a>
-    <a class="btn-secondary" href="{{ url_for('main.docs_page') }}">See the docs</a>
+    <a class="btn btn-primary" href="{{ url_for('qr.qr_editor', qr_type='url') }}">Create a QR</a>
+    <a class="btn btn-primary" href="{{ url_for('main.docs_page') }}">See the docs</a>
   </div>
   <hr class="sep"/>
 </section>
@@ -166,7 +166,7 @@
 {% endblock %}
 
 <section class="container block cta">
-  <a class="btn" href="{{ url_for('qr.qr_editor', qr_type='url') }}">Generate your first trackable QR</a>
+  <a class="btn btn-primary" href="{{ url_for('qr.qr_editor', qr_type='url') }}">Generate your first trackable QR</a>
   <p class="muted">It takes under a minute.</p>
   </section>
 
