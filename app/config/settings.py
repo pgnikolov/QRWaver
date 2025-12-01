@@ -39,6 +39,17 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
 GOOGLE_CLOCK_SKEW_SECONDS = int(os.getenv("GOOGLE_CLOCK_SKEW_SECONDS", "180") or 180)
 
+# ---------------------------------------
+# Email (SMTP) configuration
+# ---------------------------------------
+MAIL_SERVER = os.getenv("MAIL_SERVER", "")
+MAIL_PORT = int(os.getenv("MAIL_PORT", "587") or 587)
+MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
+MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "true").lower() in ("1", "true", "yes")
+MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "false").lower() in ("1", "true", "yes")
+MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", "no-reply@qrwaver.local")
+
 
 class Config:
     """Base configuration shared by all environments."""

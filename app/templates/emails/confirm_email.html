@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" style="margin:0;padding:0;background:#f6f7fb;">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirm your QRWaver account</title>
+  <style>
+    /* Basic email-safe styles */
+    body { margin:0; padding:0; background:#f6f7fb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#111827; }
+    a { color:#2563eb; text-decoration:none; }
+    .wrapper { width:100%; background:#f6f7fb; padding:24px 12px; }
+    .container { max-width:600px; margin:0 auto; background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+    /* Email header uses a dedicated banner image */
+    .header { padding:0; background:#ffffff; }
+    .brand { display:flex; align-items:center; justify-content:center; }
+    .brand img { width:100%; max-width:600px; height:auto; display:block; }
+    .hero { padding:24px 24px 8px; }
+    .title { font-size:20px; font-weight:700; margin:0 0 8px; color:#111827; }
+    .subtitle { font-size:14px; color:#4b5563; margin:0; }
+    .content { padding:8px 24px 28px; font-size:14px; line-height:1.6; color:#111827; }
+    .button-row { padding:0 24px 28px; }
+    .btn { display:inline-block; background:#2563eb; color:#ffffff !important; font-weight:600; padding:12px 18px; border-radius:8px; text-decoration:none; }
+    .link-alt { font-size:12px; color:#6b7280; word-break:break-all; margin-top:12px; }
+    .footer { padding:18px 24px; font-size:12px; color:#6b7280; background:#f9fafb; }
+    .muted { color:#6b7280; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <div class="brand">
+          <img src="{{ (base_url ~ '/static/images/branding/logo_email.png') if base_url else 'https://qr.appswork.dev/static/images/branding/logo_email.png' }}" alt="QRWaver" />
+        </div>
+      </div>
+
+      <div class="hero">
+        <h1 class="title">Confirm your email</h1>
+        <p class="subtitle">Thanks for joining QRWaver. Please verify your address to activate your account.</p>
+      </div>
+
+      <div class="content">
+        <p>Click the button below to confirm your email. This link will expire in 24 hours.</p>
+      </div>
+
+      <div class="button-row">
+        <a class="btn" href="{{ confirm_url }}" target="_blank" rel="noopener">Confirm my email</a>
+        <div class="link-alt">
+          If the button doesn't work, copy and paste this URL into your browser:<br />
+          <span>{{ confirm_url }}</span>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div>This is a transactional email related to your account on QRWaver.</div>
+        <div class="muted">If you did not sign up, you can safely ignore this message.</div>
+      </div>
+    </div>
+
+    <div style="text-align:center; font-size:11px; color:#9ca3af; margin-top:12px;">
+      © {{ (now().year) if false else '' }} QRWaver
+    </div>
+  </div>
+</body>
+</html>

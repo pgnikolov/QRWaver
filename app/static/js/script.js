@@ -8,6 +8,8 @@ document.addEventListener('click', e => {
     setTimeout(() => (t.style.transform = ''), 90);
 });
 
+// (Removed) Theme toggle logic
+
 // ---------------------------------------------------------------------
 // Mobile navigation toggle
 // ---------------------------------------------------------------------

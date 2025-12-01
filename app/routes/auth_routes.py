@@ -9,11 +9,13 @@ from flask import Blueprint, request, jsonify, current_app, render_template
 from flask_jwt_extended import create_access_token, set_access_cookies, unset_jwt_cookies
 from app.schemas.user_schema import UserRegisterSchema, UserLoginSchema
 from app.services.user_service import UserService
+from app.services.email_service import EmailService
 from pydantic import ValidationError
 import google.oauth2.id_token
 import google.auth.transport.requests
 from flask import redirect, url_for
 from app.config.settings import GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI, GOOGLE_CLIENT_SECRET
+from datetime import datetime, UTC
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -28,14 +30,40 @@ def register():
     try:
         data = UserRegisterSchema(**request.json)
     except ValidationError as e:
-        return jsonify({"success": False, "error": e.errors()}), 400
+        # Ensure JSON-serializable validation response
+        errors_list = []
+        try:
+            for err in e.errors():
+                loc = ".".join(str(x) for x in err.get("loc", []))
+                msg = err.get("msg", "Invalid value")
+                errors_list.append(f"{loc}: {msg}" if loc else msg)
+        except Exception:
+            errors_list = [str(e)]
+        return jsonify({
+            "success": False,
+            "message": errors_list[0] if errors_list else "Validation error",
+            "errors": errors_list,
+        }), 400
 
     if UserService.get_by_email(data.email):
         return jsonify({"success": False, "message": "Email already registered"}), 409
 
     # name is optional in the schema
     user = UserService.create_user(data.email, data.password, getattr(data, "name", None))
-    return jsonify({"success": True, "message": "User registered", "user_id": user.id}), 201
+
+    # Generate confirmation token and email it
+    raw_token = UserService.generate_confirmation_token(user)
+    confirm_url = url_for("auth.confirm_email", token=raw_token, _external=True)
+    EmailService.send_confirmation_email(user.email, confirm_url)
+
+    return (
+        jsonify({
+            "success": True,
+            "message": "Registration successful. Please check your email to confirm your account.",
+            "user_id": user.id,
+        }),
+        201,
+    )
 
 
 @auth_bp.post("/login")
@@ -49,11 +77,26 @@ def login():
     try:
         data = UserLoginSchema(**request.json)
     except ValidationError as e:
-        return jsonify({"success": False, "error": e.errors()}), 400
+        errors_list = []
+        try:
+            for err in e.errors():
+                loc = ".".join(str(x) for x in err.get("loc", []))
+                msg = err.get("msg", "Invalid value")
+                errors_list.append(f"{loc}: {msg}" if loc else msg)
+        except Exception:
+            errors_list = [str(e)]
+        return jsonify({
+            "success": False,
+            "message": errors_list[0] if errors_list else "Validation error",
+            "errors": errors_list,
+        }), 400
 
     user = UserService.get_by_email(data.email)
     if not user or not user.check_password(data.password):
         return jsonify({"success": False, "message": "Invalid credentials"}), 401
+
+    if not getattr(user, "is_verified", True):
+        return jsonify({"success": False, "message": "Please confirm your email before logging in."}), 403
 
     access_token = create_access_token(identity=str(user.id))
     response = jsonify({"success": True, "message": "Login successful"})
@@ -168,3 +211,45 @@ def login_page():
 def register_page():
     """Render the registration HTML page."""
     return render_template("auth/register.html")
+
+
+@auth_bp.get("/confirm")
+def confirm_email():
+    token = request.args.get("token", "")
+    user = UserService.get_by_confirm_token(token)
+    if not user:
+        return render_template("auth/confirm_result.html", success=False, message="Invalid confirmation link."), 400
+
+    if user.is_verified:
+        return render_template("auth/confirm_result.html", success=True, message="Your email is already confirmed. You can log in now."), 200
+
+    if user.confirm_expires_at and user.confirm_expires_at < datetime.now(UTC):
+        return render_template("auth/confirm_result.html", success=False, message="Confirmation link has expired. Please request a new one."), 400
+
+    # Activate
+    UserService.activate_user(user)
+    return render_template("auth/confirm_result.html", success=True, message="Your email has been confirmed. You can now log in."), 200
+
+
+@auth_bp.post("/resend-confirmation")
+def resend_confirmation():
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+    if not email:
+        return jsonify({"success": False, "message": "Email is required"}), 400
+
+    user = UserService.get_by_email(email)
+    if not user:
+        # Do not reveal whether email exists
+        return jsonify({"success": True, "message": "If an account exists for this email, a confirmation link has been sent."}), 200
+
+    if user.is_verified:
+        return jsonify({"success": True, "message": "Account is already confirmed."}), 200
+
+    if not UserService.can_resend_confirmation(user):
+        return jsonify({"success": False, "message": "Please wait a few minutes before requesting another email."}), 429
+
+    raw_token = UserService.generate_confirmation_token(user)
+    confirm_url = url_for("auth.confirm_email", token=raw_token, _external=True)
+    EmailService.send_confirmation_email(user.email, confirm_url)
+    return jsonify({"success": True, "message": "Confirmation email sent."}), 200

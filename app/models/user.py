@@ -8,6 +8,7 @@ model provides helper methods for setting and verifying password hashes.
 from datetime import datetime, UTC
 from app.extensions.extensions import db
 from passlib.hash import pbkdf2_sha256
+from sqlalchemy import Boolean
 
 
 class User(db.Model):
@@ -34,6 +35,12 @@ class User(db.Model):
 
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
     last_login = db.Column(db.DateTime(timezone=True))
+
+    # Email verification / activation
+    is_verified = db.Column(Boolean, nullable=False, default=False)
+    confirm_token_hash = db.Column(db.String(255), nullable=True)
+    confirm_expires_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    confirm_sent_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     # -----------------------------------
     # Password helpers

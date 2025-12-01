@@ -53,8 +53,9 @@ if (registerForm) {
 
         try {
             await apiPost("/auth/register", { name, email, password, confirm_password });
-            toast("Registration successful. You can now log in.", "success");
-            window.location.href = "/auth/login";
+            toast("Registration successful. Check your email to confirm your account.", "success");
+            // Keep user on the same page or redirect to login where they can log in after confirming
+            setTimeout(() => { window.location.href = "/auth/login"; }, 800);
         } catch (err) {
             toast("Register error: " + err.message, "error");
         }

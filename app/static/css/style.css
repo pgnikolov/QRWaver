@@ -28,7 +28,7 @@ body {
 
 /* Header & navigation */
 .site-header {
-    height: 120px; /* fixed header height */
+    height: 72px; /* reduced header height */
     background: #fff;
     border-bottom: 1px solid var(--line);
 }
@@ -50,7 +50,7 @@ body {
 }
 
 .logo img {
-    height: 100%; /* make the logo image fill the header height */
+    height: 40px; /* consistent, compact logo height */
     width: auto;
     display: block; /* remove inline-image baseline gap */
 }
@@ -83,7 +83,7 @@ body {
    AUTH PAGES
 ------------------------------*/
 .auth-section {
-    min-height: calc(100vh - 120px - 180px);
+    min-height: calc(100vh - 72px - 180px);
     display: grid;
     place-items: center;
     padding: 32px 16px;
@@ -524,7 +524,7 @@ h2 {
 }
 
 .footer a:hover {
-    color: var(--txt)
+    color: #111827
 }
 
 @media (max-width: 960px) {
@@ -555,7 +555,7 @@ h2 {
 }
 
 .logo img {
-    height: 150px;
+    height: 40px; /* keep header logo consistent across sections */
     width: auto;
     display: block;
 }
@@ -817,7 +817,7 @@ h2 {
 
 @media (max-width: 960px) {
     /* Header adjustments for mobile */
-    .logo img { height: 80px; }
+    .logo img { height: 32px; }
     .nav-toggle {
         display: inline-flex !important;
         flex-direction: column; /* explicitly stack bars */
@@ -1129,3 +1129,5 @@ pre code { color: inherit; }
   .features-grid { grid-template-columns: 1fr; }
   .usecases-grid { grid-template-columns: 1fr; }
 }
+
+/* Removed dark theme and CSS variables; using explicit light theme defaults */

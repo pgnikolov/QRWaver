@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="container" style="max-width:680px; padding:40px 16px;">
+    <h1>{{ 'Success' if success else 'Action required' }}</h1>
+    <p>{{ message }}</p>
+    <div style="margin-top:16px;">
+        <a class="btn" href="/auth/login">Go to Login</a>
+    </div>
+    <style>
+        .btn{display:inline-block;background:#111;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none}
+    </style>
+</section>
+{% endblock %}
