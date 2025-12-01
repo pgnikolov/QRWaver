@@ -223,8 +223,13 @@ def confirm_email():
     if user.is_verified:
         return render_template("auth/confirm_result.html", success=True, message="Your email is already confirmed. You can log in now."), 200
 
-    if user.confirm_expires_at and user.confirm_expires_at < datetime.now(UTC):
-        return render_template("auth/confirm_result.html", success=False, message="Confirmation link has expired. Please request a new one."), 400
+    # Handle potential naive datetimes from legacy rows by coercing to UTC-aware
+    if user.confirm_expires_at:
+        expires_at = user.confirm_expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=UTC)
+        if expires_at < datetime.now(UTC):
+            return render_template("auth/confirm_result.html", success=False, message="Confirmation link has expired. Please request a new one."), 400
 
     # Activate
     UserService.activate_user(user)
