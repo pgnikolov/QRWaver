@@ -20,7 +20,7 @@
 - Real‑time preview while typing (no persistence)
 - Optional frames (SVG) with client‑side composition and high‑res downloads
 - Persistence to Cloudflare R2 (SVG/PNG/JPG)
-- Short links for scans at `/s/<slug>` with analytics (IP/UA/referrer/UTM; optional geo via IPinfo)
+- Short links for scans at `/s/<slug>` with analytics
 - Dashboard listing + Delete (DB‑only; R2 asset preserved)
 - Auth: Email/Password + Google sign‑in (JWT cookies)
 - Versioned API v1 for preview, create, list, and stats
@@ -318,6 +318,60 @@ Run the test suite with pytest:
 ```bash
 pytest
 ```
+
+---
+
+## 🧭 Design decisions and trade‑offs (with references)
+
+This section explains specific choices in the codebase and why they were preferred over common alternatives. Paths and symbols below refer to this repository.
+
+- App factory: `app.__init__.py:create_app`
+  - Chosen over the simpler `app.app:create_app` as the default entry point because it centralizes extensions, logging, CORS, blueprints, and error handlers in one place. The "simple" factory remains for hosts expecting a minimal app object, but the main app uses the richer factory.
+
+- JWT in cookies, not Authorization headers
+  - See `app/config/settings.py` → `Config.JWT_TOKEN_LOCATION = ["cookies"]` and related flags. Cookies reduce friction for the browser client and avoid leaking tokens to third‑party scripts via `Authorization` headers. In production the config switches `JWT_COOKIE_SECURE = True`. We intentionally disabled CSRF here for simplicity (`JWT_COOKIE_CSRF_PROTECT = False`) — acceptable for this demo; enable it for a hardened deployment.
+
+- Rate limiting: in‑memory `SimpleRateLimiter` instead of Redis
+  - Used in `app/routes/api_routes.py` and `app/routes/qr_v1_routes.py`. The in‑process limiter keeps the preview endpoints self‑contained and fast to run locally. For multi‑instance deployments use Redis or another external store; the interface in `app/services/rate_limiter.py` is written so a drop‑in backend can replace it.
+
+- Cloudflare R2 via `boto3` S3 client, not vendor‑specific SDK
+  - See `app/services/r2_service.py`. R2 implements the S3 API, so `boto3.client("s3", endpoint_url=R2_ENDPOINT_URL, ...)` keeps the code portable and easy to swap for AWS S3, MinIO, or LocalStack. Two thin helpers are exposed: `upload_svg(...)` and `upload_image(...)` to make MIME types explicit and avoid mistakes.
+
+- SVG engine: `qrcode.image.svg.SvgPathImage` rather than basic raster only
+  - In `app/services/qr_service.py` `_generate_svg_bytes` uses `SvgPathImage`. Vector output scales cleanly and drives the live preview as a data URI. PNG/JPG paths exist for downloads, but SVG stays the default for previews because it is small and crisp at any size. Error correction is set to `qrcode.constants.ERROR_CORRECT_H` to tolerate frame overlays and minor print defects.
+
+- Short links redirect only for URL payloads
+  - In `app/routes/tracking_routes.py`, non‑URL QR types render a minimal landing page that shows the payload instead of redirecting. This avoids constructing unsafe or invalid redirects for content like Wi‑Fi configs or vCards, while still logging the scan.
+
+- Keep R2 files on delete (DB‑only removal)
+  - `DELETE /api/v1/qr/<id>` removes the DB record but leaves the asset in R2. This is deliberate: it avoids destructive storage operations and allows later retention/cleanup policies to run out‑of‑band.
+
+- Source of truth for base URLs
+  - `PUBLIC_BASE_URL` in `app/config/settings.py` is optional. If set, short links use it as the prefix; otherwise the app falls back to the incoming request host. This helps when serving behind a proxy or CDN with a public hostname.
+
+- Minimal UA parsing, no heavy user‑agent libraries
+  - `app/services/analytics_service.py` uses straightforward string checks in `_detect_device` for device/OS/browser and optional `ipinfo.io` lookup for geo. This avoids adding large parsers and keeps latency low. If you need tighter attribution fidelity, this class is the place to extend.
+
+- Two API namespaces for compatibility
+  - `app/routes/api_routes.py` is a compact legacy generator mounted at `/api/v1/generate` in the main factory (`app.__init__.py`). The versioned API lives in `app/routes/qr_v1_routes.py` under `/api/v1/qr/*`. Keeping both allows incremental migration for clients.
+
+---
+
+## 🔐 Environment and secrets
+
+- Configuration comes from `.env` loaded in `app/config/settings.py` (`dotenv`). Do not commit real secrets. Rotate any leaked keys immediately.
+- Required keys for storage and auth:
+  - `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT_URL`, `R2_PUBLIC_BASE_URL`
+  - `SECRET_KEY`, `JWT_SECRET_KEY`
+  - Optional: `PUBLIC_BASE_URL` for short links, Google OAuth keys, SMTP settings, `IPINFO_TOKEN` for geo.
+
+---
+
+## 🛠️ Local development tips
+
+- Use the provided `run.py` for local runs; it imports the main factory and starts the server with sane defaults.
+- Logs are written to `logs/api.log` as configured in `app/config/settings.py` and set up by `app.__init__.py`.
+- If you run multiple instances (e.g., gunicorn workers) and rely on rate limits, switch the limiter to a shared backend.
 
 Tests live in `tests/test_api_v1.py`. The preview smoke test targets `/api/v1/qr/preview`.
 
