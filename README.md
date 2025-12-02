@@ -20,7 +20,7 @@
 - Real‑time preview while typing (no persistence)
 - Optional frames (SVG) with client‑side composition and high‑res downloads
 - Persistence to Cloudflare R2 (SVG/PNG/JPG)
-- Short links for scans at `/s/<slug>` with analytics
+- Short links for scans at `/s/<slug>` with analytics (optional geo via IPinfo when `IPINFO_TOKEN` is set)
 - Dashboard listing + Delete (DB‑only; R2 asset preserved)
 - Auth: Email/Password + Google sign‑in (JWT cookies)
 - Versioned API v1 for preview, create, list, and stats
@@ -364,6 +364,24 @@ This section explains specific choices in the codebase and why they were preferr
   - `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT_URL`, `R2_PUBLIC_BASE_URL`
   - `SECRET_KEY`, `JWT_SECRET_KEY`
   - Optional: `PUBLIC_BASE_URL` for short links, Google OAuth keys, SMTP settings, `IPINFO_TOKEN` for geo.
+
+### Geo enrichment (`IPINFO_TOKEN`)
+- Purpose: enrich scan logs with `country/region/city` by calling `https://ipinfo.io/<ip>?token=...` in `AnalyticsService`.
+- Get a token:
+  1) Sign up at https://ipinfo.io/signup
+  2) Copy the value from https://ipinfo.io/account/token
+- Configure:
+  - Local: add to `.env`
+    ```
+    IPINFO_TOKEN=your_real_token_here
+    ```
+  - Production: set as an environment variable in your hosting panel.
+- Verify quickly:
+  ```
+  curl "https://ipinfo.io/8.8.8.8?token=YOUR_REAL_TOKEN"
+  ```
+  You should see JSON containing `country`, `region`, `city`, and `loc` (parsed to `lat`/`lon`).
+- Notes: ensure outbound HTTPS to `ipinfo.io` is allowed and that your proxy forwards client IP via `CF-Connecting-IP`, `X-Real-IP`, or `X-Forwarded-For`; otherwise geo will reflect the proxy or be empty. Free plan limits apply.
 
 ---
 
