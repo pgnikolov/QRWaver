@@ -216,14 +216,17 @@ class AnalyticsService:
         series = [{"date": d, "count": c} for d, c in series_rows]
 
         # Breakdowns
-        def top_by(field, limit=10):
+        def top_by(field, limit=10, exclude_empty=False):
+            col = getattr(QRScan, field)
+            q2 = db.session.query(col, func.count()).filter(QRScan.qr_id == qr_id)
+            if exclude_empty:
+                # Exclude NULL or empty-string values from aggregation
+                q2 = q2.filter(col.isnot(None)).filter(col != "")
             rows = (
-                db.session.query(getattr(QRScan, field), func.count())
-                .filter(QRScan.qr_id == qr_id)
-                .group_by(getattr(QRScan, field))
-                .order_by(func.count().desc())
-                .limit(limit)
-                .all()
+                q2.group_by(col)
+                  .order_by(func.count().desc())
+                  .limit(limit)
+                  .all()
             )
             return [{field: (v or "(unknown)"), "count": c} for v, c in rows]
 
@@ -234,7 +237,8 @@ class AnalyticsService:
 
         # UTM breakdown as nested dict of counts
         utm_fields = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]
-        utm = {f: top_by(f) for f in utm_fields}
+        # For UTM fields, exclude entries where users didn't provide a value (NULL/empty string)
+        utm = {f: top_by(f, exclude_empty=True) for f in utm_fields}
 
         return {
             "totals": {"scans": total},
