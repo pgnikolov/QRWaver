@@ -12,6 +12,7 @@ from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 
 from app.routes.auth_routes import auth_bp
 from flask import current_app, request, Response, url_for
+from app.config.settings import PUBLIC_BASE_URL
 
 main_bp = Blueprint("main", __name__)
 
@@ -112,6 +113,9 @@ def dashboard_page():
     return render_template("dashboard.html")
 
 
+## (removed earlier duplicate sitemap route)
+
+
 # ---------------------------------
 # SEO: robots.txt and sitemap.xml
 # ---------------------------------
@@ -157,11 +161,11 @@ def _public_base_url() -> str:
 
 @main_bp.get("/sitemap.xml")
 def sitemap_xml():
-    """Dynamic sitemap for core public pages.
+    """Dynamic sitemap for core public pages rendered via template.
 
-    Lists the primary marketing and docs pages. Extend to include more static
-    pages as needed. We do not include user dashboards or dynamic editor
-    instances.
+    Lists the primary marketing/pages and editor entry points. Excludes
+    authenticated and API endpoints. The template is simple XML suitable
+    for search engines.
     """
     base = _public_base_url()
     pages = [
@@ -184,21 +188,19 @@ def sitemap_xml():
         ("qr.qr_editor", {"qr_type": "twitter"}),
     ]
 
-    # Build XML
     now_iso = datetime.now(timezone.utc).date().isoformat()
-    urlset = []
+    entries = []
     for endpoint, params in pages:
         try:
             path = url_for(endpoint, **params)
         except Exception:
             continue
-        loc = f"{base}{path}"
-        urlset.append(f"  <url><loc>{loc}</loc><lastmod>{now_iso}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>")
+        entries.append({
+            "loc": f"{base}{path}",
+            "lastmod": now_iso,
+            "changefreq": "weekly",
+            "priority": "0.8",
+        })
 
-    xml = (
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n"
-        + "\n".join(urlset)
-        + "\n</urlset>\n"
-    )
+    xml = render_template("sitemap.xml", entries=entries)
     return Response(xml, mimetype="application/xml; charset=utf-8")
