@@ -72,6 +72,27 @@ body {
     color: var(--txt);
 }
 
+/* -----------------------------
+   ANALYTICS SHEET
+------------------------------*/
+.analytics-sheet { margin-top: 8px; display: grid; gap: 14px; }
+.sheet-summary { display: flex; align-items: baseline; gap: 10px; padding: 10px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
+.sheet-total { font-size: 22px; font-weight: 700; }
+.sheet-row { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 900px) { .sheet-row { grid-template-columns: 1fr 1fr; } }
+.sheet-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 12px; }
+.sheet-title { font-weight: 600; margin-bottom: 8px; }
+.sheet-actions { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 8px; }
+.sheet-table-wrap { width: 100%; overflow: auto; }
+.sheet-table { width: 100%; border-collapse: collapse; }
+.sheet-table thead th { position: sticky; top: 0; background: #fafafa; text-align: left; font-weight: 600; font-size: 14px; border-bottom: 1px solid var(--line); padding: 8px; cursor: pointer; }
+.sheet-table tbody td { border-top: 1px solid var(--line); padding: 8px; font-size: 14px; }
+.sheet-table tbody tr:hover { background: #f9fbff; }
+.sort-hint { color: var(--muted); font-size: 12px; margin-left: 6px; }
+
+/* small button variant for actions in cards */
+.btn-xs { padding: 4px 8px !important; font-size: 12px !important; line-height: 1.2; border-radius: 8px; }
+
 /* containers */
 .container {
     max-width: 1100px;

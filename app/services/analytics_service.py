@@ -205,6 +205,26 @@ class AnalyticsService:
 
         total = q.count()
 
+        # Unique scans — definition A: unique by IP per QR (all time / within range)
+        unique_total = (
+            db.session.query(func.count(func.distinct(QRScan.ip)))
+            .filter(QRScan.qr_id == qr_id)
+            .filter(QRScan.ip.isnot(None))
+            .filter(QRScan.ip != "")
+        )
+        # Apply time range to the unique query as well
+        if start_iso:
+            try:
+                unique_total = unique_total.filter(QRScan.ts >= datetime.fromisoformat(start_iso))
+            except Exception:
+                pass
+        if end_iso:
+            try:
+                unique_total = unique_total.filter(QRScan.ts <= datetime.fromisoformat(end_iso))
+            except Exception:
+                pass
+        unique_total = unique_total.scalar() or 0
+
         # Daily series
         series_rows = (
             db.session.query(func.date(QRScan.ts), func.count())
@@ -214,6 +234,18 @@ class AnalyticsService:
             .all()
         )
         series = [{"date": d, "count": c} for d, c in series_rows]
+
+        # Definition B: unique by IP per day
+        series_unique_rows = (
+            db.session.query(func.date(QRScan.ts), func.count(func.distinct(QRScan.ip)))
+            .filter(QRScan.qr_id == qr_id)
+            .filter(QRScan.ip.isnot(None))
+            .filter(QRScan.ip != "")
+            .group_by(func.date(QRScan.ts))
+            .order_by(func.date(QRScan.ts))
+            .all()
+        )
+        series_unique = [{"date": d, "count": (c or 0)} for d, c in series_unique_rows]
 
         # Breakdowns
         def top_by(field, limit=10, exclude_empty=False):
@@ -242,7 +274,9 @@ class AnalyticsService:
 
         return {
             "totals": {"scans": total},
+            "uniques": {"all_time": unique_total},
             "series": series,
+            "series_unique": series_unique,
             "by_country": by_country,
             "by_device": by_device,
             "by_browser": by_browser,

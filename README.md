@@ -22,6 +22,7 @@
 - Persistence to Cloudflare R2 (SVG/PNG/JPG)
 - Short links for scans at `/s/<slug>` with analytics
   - Totals and daily series
+  - Unique scans by IP (all‑time) and per‑day unique series
   - Breakdowns by country, device type, browser
   - UTM attribution (source/medium/campaign/term/content)
   - Optional geo enrichment via IPinfo when `IPINFO_TOKEN` is set
@@ -34,6 +35,7 @@
   - Set UTMs when creating a QR (URL, text, email, phone, vCard, Facebook, Instagram, LinkedIn, Twitter/X, TikTok, YouTube)
   - Stored as defaults on the QR; used for analytics if a scan arrives without explicit UTMs
   - For URL QRs, UTMs are forwarded to the destination URL (without overwriting UTMs that are already present there)
+  - UTM stats exclude empty/unspecified values; only user‑provided labels appear in the breakdowns
 
 ---
 
@@ -166,7 +168,10 @@ The frontend generates live previews by calling a lightweight API that returns a
   - Base URL for short links
     - Development: uses the current request host (e.g., http://127.0.0.1:5000) so local slugs resolve correctly.
     - Production: uses `PUBLIC_BASE_URL` when set; otherwise falls back to the request host.
-  - UTM defaults stored on each `QRCode` are merged with incoming query UTMs (incoming takes precedence). The merged UTMs are logged with the scan, and for URL QRs they are forwarded to the destination URL without overwriting any `utm_*` already present there.
+  - UTM defaults stored on each `QRCode` are merged with incoming query UTMs (incoming takes precedence). The merged UTMs are logged with the scan, and for URL QRs they are forwarded to the destination URL without overwriting any `utm_*` already present there. In analytics, empty or unspecified UTM values are excluded from breakdowns (only labeled values are shown).
+  - Unique counts: besides total scans, analytics compute unique visitors by IP in two ways:
+    - All‑time unique by IP (within the requested time window)
+    - Daily unique by IP series (distinct IPs per calendar day)
 
 ---
 
@@ -265,7 +270,33 @@ List the authenticated user’s saved QRs.
 
 ### GET `/api/v1/qr/<id>/stats`
 
-Owner‑only; returns totals, daily series, and top breakdowns by country, device type, browser, and UTM.
+Owner‑only; returns totals, unique counts, daily series (and daily unique), plus top breakdowns by country, device type, browser, and UTM.
+
+Response shape (fields of interest):
+
+```
+{
+  "success": true,
+  "totals": { "scans": 42 },
+  "uniques": { "all_time": 27 },           // distinct IPs in range
+  "series": [ { "date": "2025-12-02", "count": 5 }, ... ],
+  "series_unique": [ { "date": "2025-12-02", "count": 4 }, ... ],
+  "by_country": [ { "country": "DE", "count": 12 }, ... ],
+  "by_device": [ { "device_type": "mobile", "count": 20 }, ... ],
+  "by_browser": [ { "browser": "Chrome", "count": 18 }, ... ],
+  "utm": {
+    "utm_source": [ { "utm_source": "flyer", "count": 7 }, ... ],
+    "utm_medium": [ ... ],
+    "utm_campaign": [ ... ],
+    "utm_term": [ ... ],
+    "utm_content": [ ... ]
+  }
+}
+```
+
+Notes:
+- UTM lists exclude empty/unspecified values (we don’t show an `(unknown)` bucket for UTMs).
+- Uniques are IP‑based by design (simple, fast). See Design Decisions for trade‑offs.
 
 ### DELETE `/api/v1/qr/<id>`
 
@@ -378,6 +409,11 @@ This section explains specific choices in the codebase and why they were preferr
 
 - Minimal UA parsing, no heavy user‑agent libraries
   - `app/services/analytics_service.py` uses straightforward string checks in `_detect_device` for device/OS/browser and optional `ipinfo.io` lookup for geo. This avoids adding large parsers and keeps latency low. If you need tighter attribution fidelity, this class is the place to extend.
+
+- Unique scans counted by IP (all‑time and per‑day)
+  - We expose two "unique" metrics calculated at query time in `AnalyticsService.get_stats()`: a single all‑time distinct IP count (within the requested window) and a daily series of distinct IPs. This keeps storage simple (no extra indices/tables) and works well for lightweight attribution.
+  - Why IP and not IP+UA or cookies: IP‑only is fast and stable server‑side; UA often collapses on scanners and cookies don’t exist for native camera apps. If you need stricter uniqueness, extend `get_stats()` to use `(ip, ua)` or add a hashing strategy.
+  - Limitations: NAT/VPNs can under/over‑count. We accept that trade‑off for speed and zero client requirements.
 
 - Two API namespaces for compatibility
   - `app/routes/api_routes.py` is a compact legacy generator mounted at `/api/v1/generate` in the main factory (`app.__init__.py`). The versioned API lives in `app/routes/qr_v1_routes.py` under `/api/v1/qr/*`. Keeping both allows incremental migration for clients.
