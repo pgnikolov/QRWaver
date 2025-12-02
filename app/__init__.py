@@ -199,20 +199,22 @@ def create_app():
 
     # -------------------------------
     # Development helper: auto-create tables
+    # (Disabled in production — use Alembic migrations instead)
     # -------------------------------
-    from app.models.user import User
-    from app.models.qr_code import QRCode
-    from app.models.qr_scan import QRScan
-
     with app.app_context():
-        from app.models.user import User
-        from app.models.qr_code import QRCode
-        from app.models.qr_scan import QRScan
-
-        try:
-            db.create_all()
-            app.logger.info("✅ DB tables ensured via db.create_all()")
-        except Exception as e:
-            app.logger.error(f"❌ DB init error: {e}")
+        env = (app.config.get("ENV") or "").lower()
+        debug = bool(app.config.get("DEBUG"))
+        if env != "production" or debug:
+            # Import models so SQLAlchemy knows about tables
+            from app.models.user import User  # noqa: F401
+            from app.models.qr_code import QRCode  # noqa: F401
+            from app.models.qr_scan import QRScan  # noqa: F401
+            try:
+                db.create_all()
+                app.logger.info("✅ (dev) DB tables ensured via db.create_all()")
+            except Exception as e:
+                app.logger.error(f"❌ DB init error: {e}")
+        else:
+            app.logger.info("⏭️  Skipping db.create_all() in production — use `flask db upgrade`.")
 
     return app
