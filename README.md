@@ -406,7 +406,3 @@ MIT — free for personal & commercial use.
 - All QR types are currently free; a soft limit of 5 saved QRs per user is enforced on create. Delete older items to free a slot.
 - Delete removes only the DB record and disables the short link; the original R2 file remains accessible at its direct URL.
 - In dev, tables are ensured with `db.create_all()`. If you started with an older SQLite DB, you may need to delete `instance/qrwaver.db` or add migrations.
-
-## ❤️ Credits
-
-Created with passion & caffeine. Logo © QRWaver.
