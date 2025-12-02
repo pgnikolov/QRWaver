@@ -95,16 +95,37 @@ const json = await res.json();</code></pre>
   <ul class="bullets">
     <li><code>POST /api/v1/qr/create</code> → persist QR; returns image URL and <code>short_url</code></li>
     <li><code>GET /api/v1/qr</code> → list QRs with <code>scan_count</code></li>
-    <li><code>GET /api/v1/qr/&lt;id&gt;/stats</code> → totals, daily series, simple breakdowns</li>
+    <li><code>GET /api/v1/qr/&lt;id&gt;/stats</code> → totals, unique counts, daily series (and daily unique), breakdowns (country/device/browser/UTM)</li>
     <li><code>DELETE /api/v1/qr/&lt;id&gt;</code> → remove QR (DB only)</li>
   </ul>
+  <div class="prose" style="margin-top:10px">
+    <p><strong>Stats response fields</strong></p>
+    <pre><code>{
+  "success": true,
+  "totals": { "scans": 42 },
+  "uniques": { "all_time": 27 },              // distinct IPs within requested window
+  "series": [ { "date": "2025-12-02", "count": 5 }, ... ],
+  "series_unique": [ { "date": "2025-12-02", "count": 4 }, ... ],
+  "by_country": [ { "country": "DE", "count": 12 }, ... ],
+  "by_device": [ { "device_type": "mobile", "count": 20 }, ... ],
+  "by_browser": [ { "browser": "Chrome", "count": 18 }, ... ],
+  "utm": {
+    "utm_source": [ { "utm_source": "flyer", "count": 7 }, ... ],
+    "utm_medium": [ ... ],
+    "utm_campaign": [ ... ],
+    "utm_term": [ ... ],
+    "utm_content": [ ... ]
+  }
+}</code></pre>
+    <p class="muted">Notes: UTM breakdowns exclude empty/unspecified values (no “(unknown)” bucket for UTMs). Uniques are IP‑based for simplicity and performance; NAT/VPN can affect counts.</p>
+  </div>
 </section>
 
 <section class="container block">
   <h2 id="utm" class="section-title">Campaign tagging (UTM parameters)</h2>
   <p>
     When you create a QR, you can optionally attach UTM parameters so scans are attributed to a channel and campaign.
-    These values are stored with the QR, logged on every scan, and for URL QRs they are forwarded to the destination URL (without overwriting existing UTMs).
+    These values are stored with the QR, logged on every scan, and for URL QRs they are forwarded to the destination URL (without overwriting existing UTMs). In analytics, empty or unspecified UTM values are not shown in the breakdowns to keep the report focused on labeled traffic.
   </p>
   <div class="prose" style="line-height:1.5;">
     <p><code>utm_source</code> is a required UTM parameter that identifies the origin of web traffic, such as the website, platform, or publication that a visitor came from. It is used to track and analyze marketing campaign performance, with examples including <code>utm_source=google</code> or <code>utm_source=facebook</code>. This parameter is crucial for understanding where your traffic originates from to inform marketing decisions.</p>
