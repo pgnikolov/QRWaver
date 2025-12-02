@@ -142,6 +142,33 @@
                     </div>
                 </div>
 
+                <!-- Campaign (UTM) at creation time -->
+                <div class="utm-builder" style="margin-top:16px;">
+                    <div class="lbl" style="margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                        <span>Campaign (optional)</span>
+                        <button type="button" class="utm-info-btn" title="What are UTMs?" onclick="(function(b){var w=b.closest('.utm-builder');var x=w&&w.querySelector('.utm-help-box');if(x){var s=x.style.display;x.style.display=(s===''||s==='none')?'block':'none';}})(this)" style="border:1px solid #d1d5db; background:#fff; color:#374151; border-radius:999px; width:22px; height:22px; line-height:20px; font-size:12px; cursor:pointer;">i</button>
+                    </div>
+                    {% include 'partials/utm_help.html' %}
+                    <div class="utm-grid">
+                        <label>utm_source
+                            <input type="text" id="utm_source" placeholder="instagram | flyer">
+                        </label>
+                        <label>utm_medium
+                            <input type="text" id="utm_medium" placeholder="social | print | email">
+                        </label>
+                        <label>utm_campaign
+                            <input type="text" id="utm_campaign" placeholder="winter_2025">
+                        </label>
+                        <label>utm_term
+                            <input type="text" id="utm_term" placeholder="optional">
+                        </label>
+                        <label>utm_content
+                            <input type="text" id="utm_content" placeholder="v1_blue | poster_a">
+                        </label>
+                    </div>
+                    <p class="muted" style="margin-top:6px;">UTM values are saved with the QR. They can’t be edited later.</p>
+                </div>
+
             </div>
 
             <!-- RIGHT -->
@@ -159,7 +186,7 @@
         </div>
     </section>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/script.js', v='2025-12-02-2') }}"></script>
 
     <script>
 
@@ -205,6 +232,12 @@
 
             initQRGenerator("vcard");
 
+            const utmSource = document.getElementById("utm_source");
+            const utmMedium = document.getElementById("utm_medium");
+            const utmCampaign = document.getElementById("utm_campaign");
+            const utmTerm = document.getElementById("utm_term");
+            const utmContent = document.getElementById("utm_content");
+
             const fields = [
                 "vc-first", "vc-last",
                 "vc-phone", "vc-mobile",
@@ -235,6 +268,19 @@
                     postcode: document.getElementById("vc-postcode").value.trim(),
                     country: document.getElementById("vc-country").value.trim(),
                 };
+            };
+
+            window.getUTMFields = function () {
+                function v(x){ return x && x.value ? x.value.trim() : ""; }
+                const utm = {
+                    utm_source: v(utmSource),
+                    utm_medium: v(utmMedium),
+                    utm_campaign: v(utmCampaign),
+                    utm_term: v(utmTerm),
+                    utm_content: v(utmContent)
+                };
+                Object.keys(utm).forEach(k => { if (!utm[k]) delete utm[k]; });
+                return utm;
             };
         });
     </script>

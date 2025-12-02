@@ -20,11 +20,20 @@
 - Real‑time preview while typing (no persistence)
 - Optional frames (SVG) with client‑side composition and high‑res downloads
 - Persistence to Cloudflare R2 (SVG/PNG/JPG)
-- Short links for scans at `/s/<slug>` with analytics (optional geo via IPinfo when `IPINFO_TOKEN` is set)
+- Short links for scans at `/s/<slug>` with analytics
+  - Totals and daily series
+  - Breakdowns by country, device type, browser
+  - UTM attribution (source/medium/campaign/term/content)
+  - Optional geo enrichment via IPinfo when `IPINFO_TOKEN` is set
 - Dashboard listing + Delete (DB‑only; R2 asset preserved)
 - Auth: Email/Password + Google sign‑in (JWT cookies)
 - Versioned API v1 for preview, create, list, and stats
 - All QR types currently free; soft limit of 5 saved QRs per user
+
+- Campaign tagging (UTM) at creation time
+  - Set UTMs when creating a QR (URL, text, email, phone, vCard, Facebook, Instagram, LinkedIn, Twitter/X, TikTok, YouTube)
+  - Stored as defaults on the QR; used for analytics if a scan arrives without explicit UTMs
+  - For URL QRs, UTMs are forwarded to the destination URL (without overwriting UTMs that are already present there)
 
 ---
 
@@ -148,12 +157,16 @@ http://127.0.0.1:5000/
 
 ## 🧠 How It Works
 
-The frontend generates live previews by calling a lightweight API that returns an SVG data URI (no persistence). When a user explicitly saves — or clicks Download while logged in — the app persists the QR by rendering the requested format and uploading to Cloudflare R2, creating a `QRCode` row with a short `slug` for tracked scans.
+The frontend generates live previews by calling a lightweight API that returns an SVG data URI (no persistence). When a user explicitly saves — or clicks Download while logged in — the app persists the QR by rendering the requested format and uploading to Cloudflare R2. A `QRCode` row is created together with a short `slug` for tracked scans, and the actual QR image encodes the short URL so every real‑world scan passes through `/s/<slug>` and gets counted.
 
 - Rendering: `qrcode` library; SVG via `qrcode.image.svg.SvgPathImage`, PNG/JPG via in-memory rasterization.
 - Frames: client‑side composition; frame SVG contains a `<rect id="QR_ZONE">` region to place the QR image.
 - Storage: public R2 URL is stored in `QRCode.file_path`.
 - Tracking: `/s/<slug>` logs scan details and redirects (URL type) or shows inline landing for non‑URL payloads.
+  - Base URL for short links
+    - Development: uses the current request host (e.g., http://127.0.0.1:5000) so local slugs resolve correctly.
+    - Production: uses `PUBLIC_BASE_URL` when set; otherwise falls back to the request host.
+  - UTM defaults stored on each `QRCode` are merged with incoming query UTMs (incoming takes precedence). The merged UTMs are logged with the scan, and for URL QRs they are forwarded to the destination URL without overwriting any `utm_*` already present there.
 
 ---
 
@@ -224,7 +237,14 @@ Persists a QR to R2 and the database; returns the R2 URL, DB id, and a short lin
   "type": "url",
   "data": "https://example.com",
   "settings": { "format": "png", "size": 1024 },
-  "frame": "none|frame_whole|frame_phone|frame_bag|frame_2parts"
+  "frame": "none|frame_whole|frame_phone|frame_bag|frame_2parts",
+  "utm": {
+    "utm_source": "instagram",
+    "utm_medium": "social",
+    "utm_campaign": "winter_2025",
+    "utm_term": "",
+    "utm_content": "v1_blue"
+  }
 }
 ```
 
@@ -234,7 +254,10 @@ Response:
 { "success": true, "url": "https://...r2.../file.png", "record_id": 123, "short_url": "https://host/s/AB12cd34" }
 ```
 
-Notes: All types are free for now; free users can save up to 5 QRs.
+Notes:
+- UTMs can be provided either inside a top‑level `utm` object (preferred) or as flat fields (`utm_source`, `utm_medium`, ...). Empty values are ignored.
+- Defaults are stored on the QR and used for analytics if a scan arrives without explicit UTMs. For URL QRs, the merged UTMs are added to the destination URL on redirect without overwriting any existing `utm_*` already present there.
+- All types are free for now; free users can save up to 5 QRs.
 
 ### GET `/api/v1/qr`
 
@@ -242,7 +265,7 @@ List the authenticated user’s saved QRs.
 
 ### GET `/api/v1/qr/<id>/stats`
 
-Owner‑only; returns totals, daily series, and top breakdowns by country/device/browser/referrer and UTM.
+Owner‑only; returns totals, daily series, and top breakdowns by country, device type, browser, and UTM.
 
 ### DELETE `/api/v1/qr/<id>`
 
@@ -250,9 +273,9 @@ Owner‑only; DB‑only delete (R2 asset is preserved); invalidates short link a
 
 ### Tracking: `GET /s/<slug>`
 
-Logs a scan and then redirects:
-- URL type → 302 to target (auto‑prefixes https:// if missing)
-- Non‑URL → small inline landing page rendering content
+Logs a scan and then redirects or renders inline:
+- URL type → 302 to target (auto‑prefixes https:// if missing). Before redirecting, the service merges allowed `utm_*` from the short link with the QR’s stored defaults (incoming query values win) and forwards the result to the destination URL without overwriting any UTMs already present on the target URL.
+- Non‑URL → small inline landing page rendering content. Scans are still logged with geo/device/browser and UTM attribution (using incoming or stored defaults).
 
 ### General API utilities
 
@@ -291,6 +314,8 @@ These match the payload builders in `app/services/qr_types/*`:
 
 Easily extendable by adding new builders in `app/services/qr_types/` and mapping them in `QRService.PAYLOAD_BUILDERS`.
 
+UTM at creation time is supported in the editors for: URL, Text, Email, Phone, vCard, Facebook, Instagram, LinkedIn, Twitter/X, TikTok, YouTube. UTMs are not editable after creation.
+
 ---
 
 ## 🎨 Frames & Frontend
@@ -299,6 +324,8 @@ Easily extendable by adding new builders in `app/services/qr_types/` and mapping
 - Thumbnails in `app/static/images/frames_thumbs/`
 - Client-side composition and preview logic lives in `app/static/js/script.js`
 - Jinja templates for editors are in `app/templates/qr_editors/*`
+
+- Each editor that supports UTMs shows a small info button next to “Campaign (optional)”. It toggles an inline help box explaining the five UTM fields. This toggle is implemented inline (no dependency on a specific JS version), so it works even under aggressive static caching.
 
 If your frame SVG contains a rectangle with id `QR_ZONE`, the client can position the QR image there.
 

@@ -103,6 +103,20 @@ def create_qr_v1():
     qr_type = (payload.get("type") or "text").strip().lower()
     data = payload.get("data")
     settings = payload.get("settings") or {}
+    # UTM values can be provided either at root (utm_*) or under an "utm" object
+    utm_obj = payload.get("utm") or {}
+    def _norm(v: str) -> str | None:
+        if v is None:
+            return None
+        v = str(v).strip()
+        if not v:
+            return None
+        return v[:64]
+    utm_source = _norm(payload.get("utm_source") or utm_obj.get("utm_source"))
+    utm_medium = _norm(payload.get("utm_medium") or utm_obj.get("utm_medium"))
+    utm_campaign = _norm(payload.get("utm_campaign") or utm_obj.get("utm_campaign"))
+    utm_term = _norm(payload.get("utm_term") or utm_obj.get("utm_term"))
+    utm_content = _norm(payload.get("utm_content") or utm_obj.get("utm_content"))
 
     if data in (None, ""):
         return jsonify({"success": False, "error": "Missing data"}), 400
@@ -183,6 +197,11 @@ def create_qr_v1():
             file_path=result["url"],
             slug=slug,
             is_trackable=True,
+            utm_source=utm_source,
+            utm_medium=utm_medium,
+            utm_campaign=utm_campaign,
+            utm_term=utm_term,
+            utm_content=utm_content,
         )
         db.session.add(record)
         db.session.commit()

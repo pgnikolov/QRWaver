@@ -101,6 +101,24 @@ const json = await res.json();</code></pre>
 </section>
 
 <section class="container block">
+  <h2 id="utm" class="section-title">Campaign tagging (UTM parameters)</h2>
+  <p>
+    When you create a QR, you can optionally attach UTM parameters so scans are attributed to a channel and campaign.
+    These values are stored with the QR, logged on every scan, and for URL QRs they are forwarded to the destination URL (without overwriting existing UTMs).
+  </p>
+  <div class="prose" style="line-height:1.5;">
+    <p><code>utm_source</code> is a required UTM parameter that identifies the origin of web traffic, such as the website, platform, or publication that a visitor came from. It is used to track and analyze marketing campaign performance, with examples including <code>utm_source=google</code> or <code>utm_source=facebook</code>. This parameter is crucial for understanding where your traffic originates from to inform marketing decisions.</p>
+    <p><code>utm_medium</code> is a UTM parameter used to identify the marketing channel or type of link, such as <code>email</code>, <code>cpc</code>, <code>social</code>, or <code>display</code>, that brought traffic to a website. It is a required parameter, along with <code>utm_source</code>, and helps analytics tools categorize traffic to measure campaign effectiveness and optimize marketing efforts.</p>
+    <p><code>utm_campaign</code> is a URL parameter used to identify the specific marketing campaign a link belongs to, helping marketers track performance in analytics tools like Google Analytics. It groups related links under a single campaign name, allowing for analysis of how different channels contribute to a campaign's goals, such as a "spring sale" or "product-demo".</p>
+    <p><code>utm_term</code> is a specific UTM parameter used to identify the keyword or search term that a user clicked on in a paid search ad. It helps marketers track which specific keywords are driving traffic and conversions, providing more granular data for performance analysis in web analytics tools like Google Analytics. While most commonly used for paid search, it can also be used to identify other targeting details like a topic or audience.</p>
+    <p><code>utm_content</code> is a UTM parameter used to identify what specific content or creative was used in a campaign to drive traffic to a website, such as a unique ad, email, or link. It helps differentiate between multiple similar links pointing to the same URL, making it useful for A/B testing and comparing the performance of different versions of content. For example, you might use <code>utm_content=logolink</code> for one version of an ad and <code>utm_content=slogan1</code> for another, or <code>utm_content=header_link</code> and <code>utm_content=footer_link</code> for two different links in the same email.</p>
+  </div>
+  <p class="muted">
+    Notes: We only allow setting UTMs at creation time. If a short link is opened without UTMs, your stored defaults are used in analytics and forwarded to the final URL (URL QRs only). If the destination URL already has UTMs, we don’t overwrite them.
+  </p>
+</section>
+
+<section class="container block">
   <h2 id="errors" class="section-title">Error handling</h2>
   <ul class="bullets">
     <li>Standard JSON: <code>{ success: false, error: string, code? }</code></li>

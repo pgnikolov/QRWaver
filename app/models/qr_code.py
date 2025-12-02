@@ -39,6 +39,13 @@ class QRCode(db.Model):
     slug = db.Column(db.String(32), unique=True, nullable=True)  # short id for /s/<slug>
     is_trackable = db.Column(db.Boolean, default=True)
 
+    # Default UTM parameters captured at creation time (optional)
+    utm_source = db.Column(db.String(64), nullable=True)
+    utm_medium = db.Column(db.String(64), nullable=True)
+    utm_campaign = db.Column(db.String(64), nullable=True)
+    utm_term = db.Column(db.String(64), nullable=True)
+    utm_content = db.Column(db.String(64), nullable=True)
+
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
     scan_count = db.Column(db.Integer, default=0)
     last_scan_at = db.Column(db.DateTime(timezone=True), nullable=True)

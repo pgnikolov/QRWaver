@@ -287,7 +287,8 @@ function initQRGenerator(type = "text") {
                     type: type,
                     data: dataPayload,
                     settings: { size: 1024, format: (formatSelect?.value || "png") },
-                    frame: currentFrame
+                    frame: currentFrame,
+                    utm: (typeof window.getUTMFields === "function" ? window.getUTMFields() : undefined)
                 })
             });
             if (res.status === 401) {
@@ -408,7 +409,8 @@ function initQRGenerator(type = "text") {
                     type: type,
                     data: dataPayload,
                     settings: { size: 1024, format: (formatSelect?.value || "png") },
-                    frame: currentFrame
+                    frame: currentFrame,
+                    utm: (typeof window.getUTMFields === "function" ? window.getUTMFields() : undefined)
                 })
             });
             if (res.status === 401) {
@@ -464,4 +466,5 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Could not log out. Please try again.");
     });
   }
+  // (Removed) UTM help toggle handler — now handled inline via onclick on the button
 });

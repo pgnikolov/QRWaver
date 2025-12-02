@@ -118,6 +118,8 @@ function escapeHtml(str) {
         .replace(/>/g, "&gt;");
 }
 
+// (UTM builder removed — UTMs are now defined at creation time only)
+
 async function loadAnalytics(qrId, panelEl) {
     try {
         const res = await fetch(`/api/v1/qr/${qrId}/stats`, { credentials: "include" });
@@ -137,7 +139,6 @@ function renderStats(data) {
     const byCountry = data.by_country || [];
     const byDevice = data.by_device || [];
     const byBrowser = data.by_browser || [];
-    const byReferrer = data.by_referrer || [];
     const utm = data.utm || {};
 
     return `
@@ -161,10 +162,6 @@ function renderStats(data) {
         <div class="analytics-card">
           <div class="analytics-title">Browsers</div>
           ${renderList(byBrowser, 'browser')}
-        </div>
-        <div class="analytics-card">
-          <div class="analytics-title">Referrers</div>
-          ${renderList(byReferrer, 'referrer')}
         </div>
         <div class="analytics-card">
           <div class="analytics-title">UTM</div>
