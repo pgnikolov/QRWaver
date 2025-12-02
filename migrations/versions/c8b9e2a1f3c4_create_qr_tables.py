@@ -26,7 +26,8 @@ def upgrade():
         sa.Column('payload', sa.Text(), nullable=False),
         sa.Column('file_path', sa.String(length=255), nullable=False),
         sa.Column('slug', sa.String(length=32), unique=True, nullable=True),
-        sa.Column('is_trackable', sa.Boolean(), server_default=sa.text('1'), nullable=True),
+        # Use a PostgreSQL-compatible boolean default
+        sa.Column('is_trackable', sa.Boolean(), server_default=sa.true(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('scan_count', sa.Integer(), server_default=sa.text('0'), nullable=True),
         sa.Column('last_scan_at', sa.DateTime(timezone=True), nullable=True),
@@ -56,7 +57,10 @@ def upgrade():
         sa.Column('utm_content', sa.String(length=64), nullable=True),
     )
 
+    # Indexes are added in a dedicated migration to keep table creation separate.
+
 
 def downgrade():
+    # Drop tables (indexes are handled by the dedicated indexes migration)
     op.drop_table('qr_scans')
     op.drop_table('qr_codes')

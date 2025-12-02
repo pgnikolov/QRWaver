@@ -1,7 +1,7 @@
 """add qr utm fields
 
 Revision ID: 9f3a1c2dadd
-Revises: 423c21b1ff06
+Revises: c8b9e2a1f3c4
 Create Date: 2025-12-02 04:55:00.000000
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '9f3a1c2dadd'
-down_revision = '423c21b1ff06'
+down_revision = 'c8b9e2a1f3c4'
 branch_labels = None
 depends_on = None
 

@@ -98,8 +98,8 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(qr_api)
     app.register_blueprint(google_auth)
-    # Versioned API blueprints
-    app.register_blueprint(api_bp, url_prefix="/api/v1")
+    # Unversioned legacy API under /api (matches tests expecting /api/generate)
+    app.register_blueprint(api_bp, url_prefix="/api")
     app.register_blueprint(qr_v1_bp)
     app.register_blueprint(tracking_bp)
 
@@ -198,23 +198,26 @@ def create_app():
         return redirect(target, code=302)
 
     # -------------------------------
-    # Development helper: auto-create tables
-    # (Disabled in production — use Alembic migrations instead)
+    # Development helper: auto-create tables for SQLite only
+    # Avoid running this on PostgreSQL since we use Alembic migrations there.
     # -------------------------------
     with app.app_context():
-        env = (app.config.get("ENV") or "").lower()
-        debug = bool(app.config.get("DEBUG"))
-        if env != "production" or debug:
+        try:
+            dialect = db.engine.dialect.name  # 'sqlite', 'postgresql', etc.
+        except Exception:
+            dialect = None
+
+        if dialect == "sqlite":
             # Import models so SQLAlchemy knows about tables
             from app.models.user import User  # noqa: F401
             from app.models.qr_code import QRCode  # noqa: F401
             from app.models.qr_scan import QRScan  # noqa: F401
             try:
                 db.create_all()
-                app.logger.info("✅ (dev) DB tables ensured via db.create_all()")
+                app.logger.info("✅ (sqlite) DB tables ensured via db.create_all()")
             except Exception as e:
-                app.logger.error(f"❌ DB init error: {e}")
+                app.logger.error(f"❌ DB init error (sqlite create_all): {e}")
         else:
-            app.logger.info("⏭️  Skipping db.create_all() in production — use `flask db upgrade`.")
+            app.logger.info("⏭️  Skipping db.create_all() (dialect != sqlite). Use Alembic migrations.")
 
     return app

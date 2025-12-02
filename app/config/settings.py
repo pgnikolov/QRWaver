@@ -56,10 +56,19 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev_secret")
     DEBUG = os.getenv("DEBUG", "True").lower() in ("1", "true", "yes")
 
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL", "sqlite:///qrwaver.db"
-    )
+    # In base config, do NOT silently fall back to SQLite.
+    # DevelopmentConfig will override with an explicit SQLite fallback.
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Recommended engine options for cloud databases (e.g., Supabase Postgres)
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 1800,  # seconds
+        # Optionally tune per instance size:
+        # "pool_size": 5,
+        # "max_overflow": 10,
+    }
 
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev_jwt_secret")
     JWT_TOKEN_LOCATION = ["cookies"]
@@ -78,6 +87,8 @@ class DevelopmentConfig(Config):
     """Development defaults: debug enabled and relaxed JWT settings."""
     ENV = "development"
     DEBUG = True
+    # In development only, allow a local SQLite fallback when DATABASE_URL is not set
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///qrwaver.db")
 
 
 class ProductionConfig(Config):
@@ -88,3 +99,6 @@ class ProductionConfig(Config):
     JWT_COOKIE_SECURE = True
     # Tighter leeway in production
     JWT_DECODE_LEEWAY = 30
+    # Fail fast if DATABASE_URL is not provided in production
+    if not os.getenv("DATABASE_URL"):
+        raise RuntimeError("DATABASE_URL must be set in production")

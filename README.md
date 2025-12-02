@@ -487,3 +487,126 @@ MIT — free for personal & commercial use.
 - All QR types are currently free; a soft limit of 5 saved QRs per user is enforced on create. Delete older items to free a slot.
 - Delete removes only the DB record and disables the short link; the original R2 file remains accessible at its direct URL.
 - In dev, tables are ensured with `db.create_all()`. If you started with an older SQLite DB, you may need to delete `instance/qrwaver.db` or add migrations.
+
+## PostgreSQL (Supabase) migration — Why and How
+
+This project has been upgraded from SQLite to PostgreSQL (via Supabase). Below is a concise guide explaining the reasons, the exact changes made, and how to run everything locally and in production.
+
+### Why switch from SQLite to PostgreSQL?
+- Reliability at scale: PostgreSQL supports concurrent writes, robust transactions, and stricter typing.
+- Cloud‑hosted DB (Supabase): managed backups, metrics, and network access; no local Postgres required.
+- Better SQL features: powerful indexes, JSON/aggregations, and extensions if needed later.
+
+### What changed in the codebase
+1) Driver and connection URL
+   - We use the modern psycopg v3 driver.
+   - `.env` uses a URL like:
+     ```
+     DATABASE_URL=postgresql+psycopg://<user>:<pass>@db.<project>.supabase.co:5432/postgres?sslmode=require
+     ```
+   - `requirements.txt` includes:
+     ```
+     psycopg[binary]
+     ```
+
+2) Alembic migrations as the source of truth
+   - Migrations are linear and applied to Postgres with `flask db upgrade`.
+   - We fixed a boolean default to be PostgreSQL‑safe (`sa.true()`), and added a dedicated migration to create useful indexes.
+   - We also resolved a previous “multiple heads” situation by linearizing the chain.
+
+3) Safe app initialization (no auto‑DDL on Postgres)
+   - `app/__init__.py` will call `db.create_all()` only when the dialect is SQLite.
+   - On Postgres we rely solely on Alembic, preventing accidental DuplicateTable errors and drift.
+
+4) Connection stability for cloud DBs
+   - `app/config/settings.py` adds `SQLALCHEMY_ENGINE_OPTIONS`:
+     ```python
+     SQLALCHEMY_ENGINE_OPTIONS = {
+       "pool_pre_ping": True,
+       "pool_recycle": 1800,
+     }
+     ```
+     This reduces errors from stale connections in managed environments.
+
+5) Config hardening
+   - We removed the default SQLite fallback from base `Config`. Only `DevelopmentConfig` keeps the SQLite fallback.
+   - `ProductionConfig` fails fast if `DATABASE_URL` isn’t set, to avoid silent misconfigurations.
+
+6) Procfile for production web server
+   - Uses Gunicorn with sensible defaults:
+     ```
+     web: gunicorn run:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --preload --log-file -
+     ```
+
+### Advantages of these choices
+- Fewer surprises: No implicit `create_all()` on Postgres; schema changes live in Alembic.
+- Better performance and query plans thanks to explicit indexes.
+- More robust connections in serverless/managed environments.
+- Safer deployments: production won’t silently fall back to a local SQLite file.
+
+### One‑time migration checklist (Postgres/Supabase)
+1) Install dependencies
+   ```powershell
+   pip install -r requirements.txt
+   ```
+2) Provide the Supabase URL in `.env`
+   ```
+   DATABASE_URL=postgresql+psycopg://<user>:<pass>@db.<project>.supabase.co:5432/postgres?sslmode=require
+   ```
+3) Apply migrations
+   ```powershell
+   $env:FLASK_APP="run.py"
+   flask db upgrade
+   ```
+4) Verify connectivity
+   ```powershell
+   flask shell
+   >>> from app.extensions.extensions import db
+   >>> db.session.execute(db.text("SELECT 1")).scalar()
+   1
+   ```
+5) Start the app
+   ```powershell
+   python .\run.py
+   ```
+   Visit `http://127.0.0.1:5000/ping` — expect `{ success: true }`.
+
+### Cleaning up the old SQLite file
+- If you no longer need legacy local data, remove only the file (keep the `instance/` folder):
+  ```powershell
+  if (Test-Path .\instance\qrwaver.db) { Remove-Item .\instance\qrwaver.db }
+  ```
+
+### Common pitfalls and fixes
+- DuplicateTable on first `flask db upgrade`:
+  - Cause: tables were created earlier by `create_all()` before we disabled it for Postgres.
+  - Fix: drop the stray tables (or the `public` schema if empty), then re‑run `flask db upgrade`.
+
+- “Multiple heads” in Alembic:
+  - We resolved this by setting a clear linear chain:
+    `423c21b1ff06 -> 7b2c3df0a9d3 -> c8b9e2a1f3c4 -> 9f3a1c2dadd -> d1e2f3a4b5c6`.
+
+- Duplicate index errors:
+  - Index migration now checks for existing indexes before creating them, so it’s idempotent across environments.
+
+### Environment variables (partial list)
+- Database
+  - `DATABASE_URL` — required in staging/production. Use `?sslmode=require` for Supabase.
+- Secrets
+  - `SECRET_KEY`, `JWT_SECRET_KEY` — provide non‑default values in production.
+- Cloudflare R2 (file/CDN)
+  - `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT_URL`, `R2_PUBLIC_BASE_URL`
+- OAuth and Email
+  - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
+  - `MAIL_*` (server/port/username/password/TLS/SSL)
+
+### Security notes
+- Do not commit real `.env` credentials to version control.
+- Rotate any secrets that have been exposed during development.
+- Consider enabling CSRF protection for JWT cookies in production if your frontend uses them for state‑changing requests.
+
+### Testing
+```
+pytest -q
+```
+The suite includes a smoke test for `POST /api/generate` (quick SVG data‑URI preview), and health/version checks.
