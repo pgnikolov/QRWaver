@@ -31,6 +31,11 @@ def create_qr():
 
     data = request.get_json() or {}
     user_id = get_jwt_identity()
+    # Ensure numeric user_id for PostgreSQL comparisons
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Invalid user identity"}), 401
 
     qr_type = data.get("qr_type", "text")
     qr_format = data.get("format", "svg")  # svg | png | jpg
@@ -78,6 +83,10 @@ def create_qr():
 def list_qr_codes():
     """List the authenticated user's QR codes with basic metadata."""
     user_id = get_jwt_identity()
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Invalid user identity"}), 401
 
     from app.models.qr_code import QRCode
 

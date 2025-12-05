@@ -99,6 +99,11 @@ def create_qr_v1():
     """
     payload = request.get_json(silent=True) or {}
     user_id = get_jwt_identity()
+    # Ensure numeric user_id for PostgreSQL (avoid integer = varchar errors)
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Invalid user identity"}), 401
 
     qr_type = (payload.get("type") or "text").strip().lower()
     data = payload.get("data")
@@ -227,6 +232,10 @@ def list_qr_v1():
     counters, creation time, and (when available) a computed short link.
     """
     user_id = get_jwt_identity()
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Invalid user identity"}), 401
     items = (
         QRCode.query
         .filter_by(user_id=user_id)
@@ -282,6 +291,10 @@ def qr_stats_v1(qr_id: int):
     Query params: from, to (ISO8601), group=day (default)
     """
     user_id = get_jwt_identity()
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Invalid user identity"}), 401
     qr = QRCode.query.filter_by(id=qr_id, user_id=user_id).first()
     if not qr:
         return jsonify({"success": False, "error": "Not found"}), 404
@@ -305,6 +318,10 @@ def delete_qr_v1(qr_id: int):
     This invalidates the short link and removes the item from dashboard and stats.
     """
     user_id = get_jwt_identity()
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Invalid user identity"}), 401
     qr = QRCode.query.filter_by(id=qr_id, user_id=user_id).first()
     if not qr:
         return jsonify({"success": False, "error": "Not found"}), 404
