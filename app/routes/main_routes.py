@@ -161,11 +161,10 @@ def _public_base_url() -> str:
 
 @main_bp.get("/sitemap.xml")
 def sitemap_xml():
-    """Dynamic sitemap for core public pages rendered via template.
+    """Dynamic sitemap for core public pages.
 
-    Lists the primary marketing/pages and editor entry points. Excludes
-    authenticated and API endpoints. The template is simple XML suitable
-    for search engines.
+    Returns plain XML constructed in code (no template) to avoid any
+    templating artifacts. Includes public marketing pages and editor entries.
     """
     base = _public_base_url()
     pages = [
@@ -188,19 +187,32 @@ def sitemap_xml():
         ("qr.qr_editor", {"qr_type": "twitter"}),
     ]
 
+    def _esc(s: str) -> str:
+        return (
+            s.replace("&", "&amp;")
+             .replace("<", "&lt;")
+             .replace(">", "&gt;")
+        )
+
     now_iso = datetime.now(timezone.utc).date().isoformat()
-    entries = []
+    urls = []
     for endpoint, params in pages:
         try:
             path = url_for(endpoint, **params)
         except Exception:
             continue
-        entries.append({
-            "loc": f"{base}{path}",
-            "lastmod": now_iso,
-            "changefreq": "weekly",
-            "priority": "0.8",
-        })
+        loc = _esc(f"{base}{path}")
+        urls.append(
+            """
+  <url>
+    <loc>{loc}</loc>
+    <lastmod>{lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>""".format(loc=loc, lastmod=now_iso).strip()
+        )
 
-    xml = render_template("sitemap.xml", entries=entries)
+    body = "\n".join(urls)
+    xml = f"""<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">{('\n' + body + '\n') if body else ''}</urlset>"""
     return Response(xml, mimetype="application/xml; charset=utf-8")
