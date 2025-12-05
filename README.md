@@ -544,6 +544,22 @@ This project has been upgraded from SQLite to PostgreSQL (via Supabase). Below i
 - More robust connections in serverless/managed environments.
 - Safer deployments: production won’t silently fall back to a local SQLite file.
 
+#### Note for IPv4‑only platforms (Render, Vercel, GitHub Actions, Retool)
+Some platforms are IPv4‑only and may fail to connect to Supabase’s direct Postgres endpoint (which prefers IPv6). Use the Supabase Session Pooler (IPv4) instead:
+
+- In Supabase → Database → Connection Pooling → Session Pooler, copy the hostname/port and user.
+- Set `DATABASE_URL` with the psycopg v3 scheme and TLS:
+  ```
+  postgresql+psycopg://<POOL_USER>:<PASSWORD>@<region>.pooler.supabase.com:5432/postgres?sslmode=require&connect_timeout=10
+  ```
+  Example:
+  ```
+  postgresql+psycopg://postgres.<proj_user>:YOUR_PASSWORD@aws-1-eu-west-1.pooler.supabase.com:5432/postgres?sslmode=require&connect_timeout=10
+  ```
+  - Do not prepend `db.` to the pooler host.
+  - Keep `postgresql+psycopg://` (matches `psycopg[binary]`).
+  - URL‑encode special characters in the password.
+
 ### One‑time migration checklist (Postgres/Supabase)
 1) Install dependencies
    ```powershell
